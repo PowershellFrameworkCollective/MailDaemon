@@ -1,0 +1,22 @@
+﻿TOPIC
+	about_MailDaemon
+	
+SHORT DESCRIPTION
+	A mail daemon module that is used to send emails on behalf of scripts.
+	
+LONG DESCRIPTION
+	This module can be used to send mails on behalf of other scripts/modules.
+
+	Use Install-MDDaemon to install the agent on a system.
+	
+	Use the following commands to setup and qeueue a mail item:
+	- New-MDMail
+	- Add-MDMailContent
+	- Send-MDMail
+
+	Use Invoke-MDDaemon to send queued mails.
+	If a scheduled task has been set up for the daemon, it will try to trigger the task.
+	(Install-MDDaemon will create this task)
+
+KEYWORDS
+	MailDaemon

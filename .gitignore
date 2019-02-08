@@ -1,0 +1,22 @@
+﻿
+# ignore the settings folder and files for VSCode and PSS
+.vscode/*
+*.psproj
+*TempPoint*
+
+# Ignore staging info from Visual Studio
+library/MailDaemon/.vs/*
+library/MailDaemon/MailDaemon/bin/*
+library/MailDaemon/MailDaemon/obj/*
+
+# ignore PowerShell Studio MetaData
+MailDaemon/MailDaemon.psproj
+MailDaemon/MailDaemon.psproj.bak
+MailDaemon/MailDaemon.psprojs
+MailDaemon/MailDaemon.psproj
+
+# ignore the TestResults
+TestResults/*
+
+# ignore the publishing Directory
+publish/*

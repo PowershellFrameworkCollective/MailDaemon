@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{D6104084-F7FC-4ECE-8397-F4D691C00F16}") = "MailDaemon", "MailDaemon\MailDaemon.csproj", "{CD665D2F-C477-4E66-A3FF-98EB094A449B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CD665D2F-C477-4E66-A3FF-98EB094A449B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD665D2F-C477-4E66-A3FF-98EB094A449B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD665D2F-C477-4E66-A3FF-98EB094A449B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD665D2F-C477-4E66-A3FF-98EB094A449B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ECD2335B-C657-4D0A-AAF1-D6196E096761}
+	EndGlobalSection
+EndGlobal
