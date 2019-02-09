@@ -1,0 +1,7 @@
+﻿Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.MailPickupPath' -Value "$($env:ProgramData)\PowerShell\MailDaemon\Pickup" -Initialize -Validation 'string' -SimpleExport -Description "The folder from which the daemon will pickup email tasks."
+Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.MailSentPath' -Value "$($env:ProgramData)\PowerShell\MailDaemon\Sent" -Initialize -Validation 'string' -SimpleExport -Description "The folder into which completed tasks are moved"
+Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.MailSentRetention' -Value (New-TimeSpan -Days 7) -Initialize -Validation 'timespan' -SimpleExport -Description "How long sent email tasks are retented"
+Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.SmtpServer' -Value "mail.$($env:USERDNSDOMAIN)" -Initialize -Validation 'string' -SimpleExport -Description "The mail server to use."
+Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.SenderDefault' -Value "maildaemon@$($env:USERDNSDOMAIN)" -Initialize -Validation 'string' -SimpleExport -Description "The default sending email address."
+Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.SenderCredentialPath' -Value '' -Initialize -Validation 'string' -SimpleExport -Description "The path to the credentials to use for authenticated mail sending."
+Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.RecipientDefault' -Value "support@$($env:USERDNSDOMAIN)" -Initialize -Validation 'string' -SimpleExport -Description "The default recipient to receive emails."

@@ -1,24 +1,33 @@
 ﻿# Description
 
-The mail daemon module implements mailing infrastructure that enables tasks to reliably send email reports.
+Insert a useful description for the MailDaemon project here.
 
-Benefits:
+Remember, it's the first thing a visitor will see.
 
- - Will automatically retry on send failure during network issues
- - Centrally manageable email configuration
- - Tasks do not need access to mailing credentials
- - Eventlog entries on send failure and access to sent and pending emails for troubleshooting
+# Project Setup Instructions
+## Working with the layout
 
-# Setting up the Daemon
+ - Don't touch the psm1 file
+ - Place functions you export in `functions/` (can have subfolders)
+ - Place private/internal functions invisible to the user in `internal/functions` (can have subfolders)
+ - Don't add code directly to the `postimport.ps1` or `preimport.ps1`.
+   Those files are designed to import other files only.
+ - When adding files you load during `preimport.ps1`, be sure to add corresponding entries to `filesBefore.txt`.
+   The text files are used as reference when compiling the module during the build script.
+ - When adding files you load during `postimport.ps1`, be sure to add corresponding entries to `filesAfter.txt`.
+   The text files are used as reference when compiling the module during the build script.
 
-To start using this module, you need to first install it using `Install-MDDaemon`.
+## Setting up CI/CD
 
-This step _cannot_ be replaced by `Install-Module`, as it is also used to set up intial configuration and setting up the task. However source code deployment can be done via `Install-Module`.
+> To create a PR validation pipeline, set up tasks like this:
 
-# Sending emails
+ - Install Prerequisites (PowerShell Task; VSTS-Prerequisites.ps1)
+ - Validate (PowerShell Task; VSTS-Validate.ps1)
+ - Publish Test Results (Publish Test Results; NUnit format; Run no matter what)
 
-To send emails, have your script use the following commands:
+> To create a build/publish pipeline, set up tasks like this:
 
- - `Set-MDMail` to configure email parameters, such as subject, attachments or recipient
- - `Add-MDMailContent` to add content to the email body
- - `Send-MDMail` to queue the email for delivery and manually trigger the daemon task to try send right away
+ - Install Prerequisites (PowerShell Task; VSTS-Prerequisites.ps1)
+ - Validate (PowerShell Task; VSTS-Validate.ps1)
+ - Build (PowerShell Task; VSTS-Build.ps1)
+ - Publish Test Results (Publish Test Results; NUnit format; Run no matter what)

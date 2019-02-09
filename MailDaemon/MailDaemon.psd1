@@ -3,33 +3,31 @@
 	ModuleToProcess = 'MailDaemon.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.0.2'
+	ModuleVersion = '0.1.0'
 	
 	# ID used to uniquely identify this module
-	GUID = 'dd53d2c7-2071-4d7c-9e80-f03645cda1db'
+	GUID = 'd5ba333f-5210-4d69-83f0-150dd0909139'
 	
 	# Author of this module
 	Author = 'Friedrich Weinmann'
 	
 	# Company or vendor of this module
-	CompanyName = 'Microsoft'
+	CompanyName = ' '
 	
 	# Copyright statement for this module
-	Copyright = 'Copyright (c) 2018 Friedrich Weinmann'
+	Copyright = 'Copyright (c) 2019 Friedrich Weinmann'
 	
 	# Description of the functionality provided by this module
-	Description = 'Module for managing email sending'
+	Description = 'Mail Daemon as PowerShell Module'
 	
 	# Minimum version of the Windows PowerShell engine required by this module
 	PowerShellVersion = '5.0'
 	
 	# Modules that must be imported into the global environment prior to importing
 	# this module
-	<#
 	RequiredModules = @(
-		@{ ModuleName='PSFramework'; ModuleVersion='0.10.27.128' }
+		@{ ModuleName='PSFramework'; ModuleVersion='0.10.31.179' }
 	)
-	#>
 	
 	# Assemblies that must be loaded prior to importing this module
 	# RequiredAssemblies = @('bin\MailDaemon.dll')
@@ -42,12 +40,14 @@
 	
 	# Functions to export from this module
 	FunctionsToExport = @(
-		'Add-MDMailContent',
-		'Install-MDDaemon',
-		'Invoke-MDDaemon',
-		'Save-MDCredential',
-		'Send-MDMail',
+		'Add-MDMailContent'
+		'Install-MDDaemon'
+		'Invoke-MDDaemon'
+		'Save-MDCredential'
+		'Send-MDMail'
+		'Set-MDDaemon'
 		'Set-MDMail'
+		'Update-MDFolderPermission'
 	)
 	
 	# Cmdlets to export from this module

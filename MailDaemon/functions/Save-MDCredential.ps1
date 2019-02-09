@@ -8,7 +8,7 @@
 			This command encrypts credentials to a protected credentials file in the file system.
 			This is designed to allow storing credential objects for use by scheduled task that run as SYSTEM or a service account.
 
-		.PARAMETER Credential
+		.PARAMETER TargetCredential
 			The credentials to encrypt and write to file.
 
 		.PARAMETER Path
@@ -22,9 +22,13 @@
 
 		.PARAMETER ComputerName
 			The computer(s) to write the credential to.
+	
+		.PARAMETER Credential
+			The credentials to use to authenticate to the target system.
+			NOT the credentials stored for reuse.
 
 		.EXAMPLE
-			PS C:\> Save-MDCredential -ComputerName DC1,DC2,DC3 -Credential $cred -Path "C:\ProgramData\PowerShell\Tasks\tesk1_credential.clixml"
+			PS C:\> Save-MDCredential -ComputerName DC1,DC2,DC3 -TargetCredential $cred -Path "C:\ProgramData\PowerShell\Tasks\tesk1_credential.clixml"
 
 			Saves the credentials stored in $cred on the computers DC1, DC2, DC3 for use by the SYSTEM account
 	#>
@@ -33,7 +37,7 @@
 	Param (
 		[Parameter(Mandatory = $true)]
 		[PSCredential]
-		$Credential,
+		$TargetCredential,
 
 		[Parameter(Mandatory = $true)]
 		[string]
@@ -43,18 +47,22 @@
 		$AccessAccount,
 
 		[Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
-		[Alias('DNSHostName')]
-		[string[]]
-		$ComputerName = $env:COMPUTERNAME
+		[PSFComputer[]]
+		$ComputerName = $env:COMPUTERNAME,
+		
+		[PSCredential]
+		$Credential
 	)
 
 	process
 	{
 		$parameters = @{
-			ArgumentList = $Credential, $Path, $AccessAccount
+			ArgumentList = $TargetCredential, $Path, $AccessAccount
+			ComputerName = $ComputerName
+			Credential = $Credential
 		}
-		if ($env:COMPUTERNAME -ne $ComputerName) { $parameters['ComputerName'] = $ComputerName }
-		Invoke-Command @parameters -ScriptBlock {
+		
+		Invoke-PSFCommand @parameters -ScriptBlock {
 			Param (
 				[PSCredential]
 				$Credential,

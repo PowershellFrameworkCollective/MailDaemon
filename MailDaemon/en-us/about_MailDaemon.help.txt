@@ -10,7 +10,7 @@ LONG DESCRIPTION
 	Use Install-MDDaemon to install the agent on a system.
 	
 	Use the following commands to setup and qeueue a mail item:
-	- New-MDMail
+	- Set-MDMail
 	- Add-MDMailContent
 	- Send-MDMail
 

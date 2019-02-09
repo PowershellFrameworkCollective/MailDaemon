@@ -1,5 +1,5 @@
-﻿New-PSFLicense -Product 'MailDaemon' -Manufacturer 'Friedrich Weinmann' -ProductVersion $script:ModuleVersion -ProductType Module -Name MIT -Version "1.0.0.0" -Date (Get-Date "2018-09-27") -Text @"
-Copyright (c) 2018 Friedrich Weinmann
+﻿New-PSFLicense -Product 'MailDaemon' -Manufacturer 'Friedrich Weinmann' -ProductVersion $script:ModuleVersion -ProductType Module -Name MIT -Version "1.0.0.0" -Date (Get-Date "2019-02-08") -Text @"
+Copyright (c) 2019 Friedrich Weinmann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

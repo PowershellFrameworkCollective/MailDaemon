@@ -1,9 +1,8 @@
 ﻿$script:ModuleRoot = $PSScriptRoot
-$script:ModuleVersion = "1.0.2"
-$script:_Config = @{}
+$script:ModuleVersion = (Import-PowerShellDataFile -Path "$($script:ModuleRoot)\MailDaemon.psd1").ModuleVersion
 
 # Detect whether at some level dotsourcing was enforced
-$script:doDotSource = $false
+$script:doDotSource = Get-PSFConfigValue -FullName MailDaemon.Import.DoDotSource -Fallback $false
 if ($MailDaemon_dotsourcemodule) { $script:doDotSource = $true }
 
 <#
@@ -15,10 +14,10 @@ This is important when testing for paths.
 #>
 
 # Detect whether at some level loading individual module files, rather than the compiled module was enforced
-$importIndividualFiles = $false
+$importIndividualFiles = Get-PSFConfigValue -FullName MailDaemon.Import.IndividualFiles -Fallback $false
 if ($MailDaemon_importIndividualFiles) { $importIndividualFiles = $true }
-if (Test-Path "$($script:ModuleRoot)\..\.git") { $importIndividualFiles = $true }
-if (-not (Test-Path "$($script:ModuleRoot)\commands.ps1")) { $importIndividualFiles = $true }
+if (Test-Path (Resolve-PSFPath -Path "$($script:ModuleRoot)\..\.git" -SingleItem -NewChild)) { $importIndividualFiles = $true }
+if ("<was not compiled>" -eq '<was not compiled>') { $importIndividualFiles = $true }
 	
 function Import-ModuleFile
 {
@@ -50,6 +49,7 @@ function Import-ModuleFile
 	else { $ExecutionContext.InvokeCommand.InvokeScript($false, ([scriptblock]::Create([io.file]::ReadAllText((Resolve-Path $Path)))), $null, $null) }
 }
 
+#region Load individual files
 if ($importIndividualFiles)
 {
 	# Execute Preimport actions
@@ -69,18 +69,12 @@ if ($importIndividualFiles)
 	
 	# Execute Postimport actions
 	. Import-ModuleFile -Path "$ModuleRoot\internal\scripts\postimport.ps1"
-}
-else
-{
-	if (Test-Path "$($script:ModuleRoot)\resourcesBefore.ps1")
-	{
-		. Import-ModuleFile -Path "$($script:ModuleRoot)\resourcesBefore.ps1"
-	}
 	
-	. Import-ModuleFile -Path "$($script:ModuleRoot)\commands.ps1"
-	
-	if (Test-Path "$($script:ModuleRoot)\resourcesAfter.ps1")
-	{
-		. Import-ModuleFile -Path "$($script:ModuleRoot)\resourcesAfter.ps1"
-	}
+	# End it here, do not load compiled code below
+	return
 }
+#endregion Load individual files
+
+#region Load compiled code
+"<compile code into here>"
+#endregion Load compiled code

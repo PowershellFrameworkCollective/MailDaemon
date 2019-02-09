@@ -1,30 +1,17 @@
-﻿# Default configuration
-$script:_Config = @{
-    MailPickupPath = "$($env:ProgramData)\PowerShell\MailDaemon\Pickup"
-    MailSentPath = "$($env:ProgramData)\PowerShell\MailDaemon\Sent"
-    MailSentRetention = (New-TimeSpan -Days 7)
-    SmtpServer = "mail.domain.com"
-    SenderDefault = 'maildaemon@domain.com'
-    SenderCredentialPath = ''
-    RecipientDefault = 'support@domain.com'
-}
+﻿<#
+This is an example configuration file
 
-# Load from export using Export-Clixml (high maintainability using PowerShell)
-if (Test-Path "$($env:ProgramData)\PowerShell\MailDaemon\config.clixml")
-{
-    $data = Import-Clixml "$($env:ProgramData)\PowerShell\MailDaemon\config.clixml"
-    foreach ($property in $data.PSObject.Properties)
-    {
-        $script:_Config[$property.Name] = $property.Value
-    }
-}
+By default, it is enough to have a single one of them,
+however if you have enough configuration settings to justify having multiple copies of it,
+feel totally free to split them into multiple files.
+#>
 
-# Load from json file if possible (high readability)
-if (Test-Path "$($env:ProgramData)\PowerShell\MailDaemon\config.json")
-{
-    $data = Get-Content "$($env:ProgramData)\PowerShell\MailDaemon\config.json" | ConvertFrom-Json
-    foreach ($property in $data.PSObject.Properties)
-    {
-        $script:_Config[$property.Name] = $property.Value
-    }
-}
+<#
+# Example Configuration
+Set-PSFConfig -Module 'MailDaemon' -Name 'Example.Setting' -Value 10 -Initialize -Validation 'integer' -Handler { } -Description "Example configuration setting. Your module can then use the setting using 'Get-PSFConfigValue'"
+#>
+
+Set-PSFConfig -Module 'MailDaemon' -Name 'Import.DoDotSource' -Value $false -Initialize -Validation 'bool' -Description "Whether the module files should be dotsourced on import. By default, the files of this module are read as string value and invoked, which is faster but worse on debugging."
+Set-PSFConfig -Module 'MailDaemon' -Name 'Import.IndividualFiles' -Value $false -Initialize -Validation 'bool' -Description "Whether the module files should be imported individually. During the module build, all module code is compiled into few files, which are imported instead by default. Loading the compiled versions is faster, using the individual files is easier for debugging and testing out adjustments."
+
+Set-PSFConfig -Module 'MailDaemon' -Name 'Task.Author' -Value "$($env:USERDOMAIN) IT Department" -Initialize -Validation 'string' -SimpleExport -Description 'When setting up the scheduled task using Install-MDDaemon, this is the name used as the author of the scheduled task'

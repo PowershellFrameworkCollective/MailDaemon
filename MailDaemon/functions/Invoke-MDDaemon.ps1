@@ -24,19 +24,19 @@
 	
 	begin
 	{
-		if (-not (Test-Path $script:_Config.MailPickupPath))
+		if (-not (Test-Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')))
 		{
-			$null = New-Item -Path $script:_Config.MailPickupPath -ItemType Directory
+			$null = New-Item -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath') -ItemType Directory
 		}
-		if (-not (Test-Path $script:_Config.MailSentPath))
+		if (-not (Test-Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentPath')))
 		{
-			$null = New-Item -Path $script:_Config.MailSentPath -ItemType Directory
+			$null = New-Item -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentPath') -ItemType Directory
 		}
 	}
 	process
 	{
 		#region Send mails
-		foreach ($item in (Get-ChildItem -Path $script:_Config.MailPickupPath))
+		foreach ($item in (Get-ChildItem -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')))
 		{
 			$email = Import-Clixml -Path $item.FullName
 			# Skip emails that should not yet be processed
@@ -44,29 +44,26 @@
 
 			# Build email parameters
 			$parameters = @{
-				SmtpServer = $script:_Config.SmtpServer
+				SmtpServer = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SmtpServer'
 				Encoding = ([System.Text.Encoding]::UTF8)
 				ErrorAction = 'Stop'
 			}
 			if ($email.To) { $parameters["To"] = $email.To }
-			else { $parameters["To"] = $script:_Config.RecipientDefault }
+			else { $parameters["To"] = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.RecipientDefault' }
 			if ($email.From) { $parameters["From"] = $email.From }
-			else { $parameters["From"] = $script:_Config.SenderDefault }
+			else { $parameters["From"] = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SenderDefault' }
 			if ($email.Cc) { $parameters["Cc"] = $email.Cc }
 			if ($email.Subject) { $parameters["Subject"] = $email.Subject }
 			else { $parameters["Subject"] = "<no subject>" }
 			if ($email.Body) { $parameters["Body"] = $email.Body }
 			if ($null -ne $email.BodyAsHtml) { $parameters["BodyAsHtml"] = $email.BodyAsHtml }
 			if ($email.Attachments) { $parameters["Attachments"] = $email.Attachments }
-			if ($script:_Config.SenderCredentialPath) { $parameters["Credential"] = Import-Clixml $script:_Config.SenderCredentialPath }
-
+			if ($script:_Config.SenderCredentialPath) { $parameters["Credential"] = Import-Clixml (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SenderCredentialPath') }
+			
+			Write-PSFMessage -Level Verbose -String 'Invoke-MDDaemon.SendMail.Start' -StringValues @($email.Taskname, $parameters['Subject'], $parameters['From'], ($parameters['To'] -join ",")) -Target $email.Taskname
 			try { Send-MailMessage @parameters }
-			catch
-			{
-				Write-Log -Type Error -Message "Failed to send email! $_"
-				continue
-			}
-			Write-Log -Message "Email sent for $($email.Taskname)"
+			catch { Stop-PSFFunction -String 'Invoke-MDDaemon.SendMail.Failed' -StringValues $email.Taskname -ErrorRecord $_ -Continue -Target $email.Taskname }
+			Write-PSFMessage -Level Verbose -String 'Invoke-MDDaemon.SendMail.Success' -StringValues $email.Taskname -Target $email.Taskname
 
 			# Remove attachments only if ordered and maail was sent successfully
 			if ($email.Attachments -and $email.RemoveAttachments)
@@ -79,10 +76,10 @@
 
 			# Update the timestamp (the timeout for deletion uses this) and move it to the sent items folder
 			$item.LastWriteTime = Get-Date
-			try { Move-Item -Path $item.FullName -Destination $script:_Config.MailSentPath -Force -ErrorAction Stop }
+			try { Move-Item -Path $item.FullName -Destination (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentPath') -Force -ErrorAction Stop }
 			catch
 			{
-				Write-Log -Type Error -Message "Failed to move email to sent folder: $_"
+				Write-PSFMessage -Level Warning -String 'Invoke-MDDaemon.ManageSuccessJob.Failed' -StringValues $email.Taskname -Target $email.Taskname
 			}
 		}
 		#endregion Send mails
@@ -90,9 +87,9 @@
 	end
 	{
 		#region Cleanup expired mails
-		foreach ($item in (Get-ChildItem -Path $script:_Config.MailSentPath))
+		foreach ($item in (Get-ChildItem -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentPath')))
 		{
-			if ($item.LastWriteTime -lt (Get-Date).Add((-1 * ([timespan]$script:_Config.MailSentRetention))))
+			if ($item.LastWriteTime -lt (Get-Date).Add((-1 * (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentRetention'))))
 			{
 				Remove-Item $item.FullName
 			}

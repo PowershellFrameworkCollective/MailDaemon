@@ -6,7 +6,6 @@
 
 		.DESCRIPTION
 			Uses the data prepared by Set-MDMail or Add-MDMailContent and queues the email for delivery.
-			Writes to eventlog with ID 666 if this fails.
 
 		.PARAMETER TaskName
 			Name of the task that is sending the email.
@@ -27,29 +26,28 @@
 	begin
 	{
 		# Ensure the pickup patch exists
-		if (-not (Test-Path $script:_Config.MailPickupPath))
+		if (-not (Test-Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')))
 		{
-			try { $null = New-Item -Path $script:_Config.MailPickupPath -ItemType Directory -Force -ErrorAction Stop }
+			try { $null = New-Item -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath') -ItemType Directory -Force -ErrorAction Stop }
 			catch
 			{
-				Write-Log -Type 'Error' -Message "Failed to create outgoing mail folder: $_"
-				throw
+				Stop-PSFFunction -String 'Send-MDMail.Folder.CreationFailed' -StringValues (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath') -ErrorRecord $_ -Cmdlet $PSCmdlet -EnableException $true
 			}
 		}
 	}
 	process
 	{
 		# Don't send an email if nothing was set up
-		if (-not $script:mail) { throw "No mail queued yet!" }
+		if (-not $script:mail) { Stop-PSFFunction -String 'Send-MDMail.Email.NotRegisteredYet' -EnableException $true -Cmdlet $PSCmdlet }
 
 		$script:mail['Taskname'] = $TaskName
-
+		
 		# Send the email
-		try { [PSCustomObject]$script:mail | Export-Clixml -Path "$($script:_Config.MailPickupPath)\$($TaskName)-$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').clixml" -ErrorAction Stop }
+		Write-PSFMessage -String 'Send-MDMail.Email.Sending' -StringValues $TaskName -Target $TaskName
+		try { [PSCustomObject]$script:mail | Export-Clixml -Path "$(Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')\$($TaskName)-$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').clixml" -ErrorAction Stop }
 		catch
 		{
-			Write-Log -Type 'Error' -Message "Failed to write outgoing email: $_"
-			throw
+			Stop-PSFFunction -String 'Send-MDMail.Email.SendingFailed' -StringValues $TaskName -ErrorRecord $_ -Cmdlet $PSCmdlet -EnableException $true -Target $TaskName
 		}
 
 		# Reset email, now that it is queued
@@ -58,8 +56,7 @@
 		try { Start-ScheduledTask -TaskName MailDaemon -ErrorAction Stop }
 		catch
 		{
-			Write-Log -Type 'Error' -Message "Failed to start daemon task: $_"
-			throw
+			Stop-PSFFunction -String 'Send-MDMail.Email.TriggerFailed' -StringValues $TaskName -ErrorRecord $_ -Cmdlet $PSCmdlet -EnableException $true -Target $TaskName
 		}
 	}
 }
