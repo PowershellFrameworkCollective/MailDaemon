@@ -207,8 +207,8 @@
 			Set-MDDaemon @parameters
 			
 			#region Set file permissions
-			if (-not (Test-Path $_Config.MailPickupPath)) { $null = New-Item $_Config.MailPickupPath -Force -ItemType Directory }
-			if (-not (Test-Path $_Config.MailSentPath)) { $null = New-Item $_Config.MailSentPath -Force -ItemType Directory }
+			if (-not (Test-Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath'))) { $null = New-Item (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath') -Force -ItemType Directory }
+			if (-not (Test-Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentPath'))) { $null = New-Item (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentPath') -Force -ItemType Directory }
 			
 			if ($Parameters.DaemonUser) { Update-MDFolderPermission -DaemonUser $Parameters.DaemonUser }
 			if ($Parameters.WriteUser) { Update-MDFolderPermission -WriteUser $Parameters.WriteUser }
