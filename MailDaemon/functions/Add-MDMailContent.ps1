@@ -37,7 +37,7 @@
 			if (-not ($script:mail["Body"])) { $script:mail["body"] = $Body }
 			else { $script:mail["Body"] = $script:mail["Body"], $Body -join "`n" }
 		}
-		if ($Attachments) { 
+		if ($Attachments) {
 			if (-not $script:mail["Attachments"]) { $script:mail["Attachments"] = $Attachments }
 			else { $script:mail["Attachments"] = @($script:mail["Attachments"]) + @($Attachments) }
 		}
