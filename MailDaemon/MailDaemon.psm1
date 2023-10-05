@@ -1,5 +1,5 @@
 ﻿$script:ModuleRoot = $PSScriptRoot
-$script:ModuleVersion = (Import-PowerShellDataFile -Path "$($script:ModuleRoot)\MailDaemon.psd1").ModuleVersion
+$script:ModuleVersion = (Import-PSFPowerShellDataFile -Path "$($script:ModuleRoot)\MailDaemon.psd1").ModuleVersion
 
 # Detect whether at some level dotsourcing was enforced
 $script:doDotSource = Get-PSFConfigValue -FullName MailDaemon.Import.DoDotSource -Fallback $false
@@ -45,15 +45,18 @@ function Import-ModuleFile
 		$Path
 	)
 	
-	if ($doDotSource) { . (Resolve-Path $Path) }
-	else { $ExecutionContext.InvokeCommand.InvokeScript($false, ([scriptblock]::Create([io.file]::ReadAllText((Resolve-Path $Path)))), $null, $null) }
+	$resolvedPath = $ExecutionContext.SessionState.Path.GetResolvedPSPathFromPSPath($Path).ProviderPath
+	if ($doDotSource) { . $resolvedPath }
+	else { $ExecutionContext.InvokeCommand.InvokeScript($false, ([scriptblock]::Create([io.file]::ReadAllText($resolvedPath))), $null, $null) }
 }
 
 #region Load individual files
 if ($importIndividualFiles)
 {
 	# Execute Preimport actions
-	. Import-ModuleFile -Path "$ModuleRoot\internal\scripts\preimport.ps1"
+	foreach ($path in (& "$ModuleRoot\internal\scripts\preimport.ps1")) {
+		. Import-ModuleFile -Path $path
+	}
 	
 	# Import all internal functions
 	foreach ($function in (Get-ChildItem "$ModuleRoot\internal\functions" -Filter "*.ps1" -Recurse -ErrorAction Ignore))
@@ -68,7 +71,9 @@ if ($importIndividualFiles)
 	}
 	
 	# Execute Postimport actions
-	. Import-ModuleFile -Path "$ModuleRoot\internal\scripts\postimport.ps1"
+	foreach ($path in (& "$ModuleRoot\internal\scripts\postimport.ps1")) {
+		. Import-ModuleFile -Path $path
+	}
 	
 	# End it here, do not load compiled code below
 	return
