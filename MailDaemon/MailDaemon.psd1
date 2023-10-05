@@ -1,9 +1,9 @@
 ﻿@{
 	# Script module or binary module file associated with this manifest
-	ModuleToProcess = 'MailDaemon.psm1'
+	RootModule = 'MailDaemon.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '0.1.1'
+	ModuleVersion = '1.0.0'
 	
 	# ID used to uniquely identify this module
 	GUID = 'd5ba333f-5210-4d69-83f0-150dd0909139'
@@ -26,7 +26,7 @@
 	# Modules that must be imported into the global environment prior to importing
 	# this module
 	RequiredModules = @(
-		@{ ModuleName='PSFramework'; ModuleVersion='0.10.31.179' }
+		@{ ModuleName='PSFramework'; ModuleVersion='1.9.310' }
 	)
 	
 	# Assemblies that must be loaded prior to importing this module
@@ -51,13 +51,13 @@
 	)
 	
 	# Cmdlets to export from this module
-	CmdletsToExport = ''
+	CmdletsToExport = @()
 	
 	# Variables to export from this module
-	VariablesToExport = ''
+	VariablesToExport = @()
 	
 	# Aliases to export from this module
-	AliasesToExport = ''
+	AliasesToExport = @()
 	
 	# List of all modules packaged with this module
 	ModuleList = @()
@@ -72,19 +72,19 @@
 		PSData = @{
 			
 			# Tags applied to this module. These help with module discovery in online galleries.
-			# Tags = @()
+			Tags = @('mail')
 			
 			# A URL to the license for this module.
-			# LicenseUri = ''
+			LicenseUri = 'https://github.com/PowershellFrameworkCollective/MailDaemon/blob/master/LICENSE'
 			
 			# A URL to the main website for this project.
-			# ProjectUri = ''
+			ProjectUri = 'https://github.com/PowershellFrameworkCollective/MailDaemon'
 			
 			# A URL to an icon representing this module.
 			# IconUri = ''
 			
 			# ReleaseNotes of this module
-			# ReleaseNotes = ''
+			ReleaseNotes = 'https://github.com/PowershellFrameworkCollective/MailDaemon/blob/master/MailDaemon/changelog.md'
 			
 		} # End of PSData hashtable
 		
