@@ -89,7 +89,7 @@
 		#region Cleanup expired mails
 		foreach ($item in (Get-ChildItem -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentPath')))
 		{
-			if ($item.LastWriteTime -lt (Get-Date).Add((-1 * (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentRetention'))))
+			if ($item.LastWriteTime -lt (Get-Date).AddTicks((-1 * (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentRetention').Ticks)))
 			{
 				Remove-Item $item.FullName
 			}
