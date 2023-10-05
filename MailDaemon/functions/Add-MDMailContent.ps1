@@ -1,5 +1,4 @@
-﻿function Add-MDMailContent
-{
+﻿function Add-MDMailContent {
 	<#
 		.SYNOPSIS
 			Adds content to a pending email.
@@ -28,19 +27,19 @@
 		$Attachments
 	)
 	
-	begin
-	{
-		if (-not $script:mail)
-		{
+	begin {
+		if (-not $script:mail) {
 			$script:mail = @{ }
 		}
 	}
-	process
-	{
-		if ($Body)
-		{
+	process {
+		if ($Body) {
 			if (-not ($script:mail["Body"])) { $script:mail["body"] = $Body }
 			else { $script:mail["Body"] = $script:mail["Body"], $Body -join "`n" }
+		}
+		if ($Attachments) { 
+			if (-not $script:mail["Attachments"]) { $script:mail["Attachments"] = $Attachments }
+			else { $script:mail["Attachments"] = @($script:mail["Attachments"]) + @($Attachments) }
 		}
 	}
 }
