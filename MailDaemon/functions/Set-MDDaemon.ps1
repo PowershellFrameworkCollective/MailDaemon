@@ -109,7 +109,7 @@
 				}
 			}
 			
-			Get-PSFConfig -Module MailDaemon -Name Daemon.* | Where-Object Unchanged -EQ $false | Register-PSFConfig -Scope FileSystem
+			Get-PSFConfig -Module MailDaemon -Name Daemon.* | Where-Object Unchanged -EQ $false | Register-PSFConfig -Scope SystemDefault
 		}
 		#endregion Configuration Script
 		

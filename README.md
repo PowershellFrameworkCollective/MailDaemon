@@ -8,21 +8,21 @@ Then this module is for you!
 
 # Main Features
 
- - Centralize mail sending, with dedicated account or credentials
- - Retry sending emails when service is unavailable
- - Full logging without having to worry about the logs - never again lose a message without being able to look up why
- - Easy to setup
- - Easy to use
- - Manageable by Group Policy / SCCM / Intune / ...
++ Centralize mail sending, with dedicated account or credentials
++ Retry sending emails when service is unavailable
++ Full logging without having to worry about the logs - never again lose a message without being able to look up why
++ Easy to setup
++ Easy to use
++ Manageable by Group Policy / SCCM / Intune / ...
 
 # Prerequisites
 
- - PowerShell 5.1
- - PowerShell Module: PSFramework
++ PowerShell 5.1
++ PowerShell Module: PSFramework
 
 # Installation
 
-To install the module from the PSGalelry, run this line:
+To install the module from the PSGallery, run this line:
 
 ```powershell
 Install-Module MailDaemon
@@ -56,7 +56,7 @@ Can be run any number of times to later specify other information
 Set-MDMail -From 'backuptask@domain.com' -To 'backupadmins@domain.com' -Subject 'Backup Failed'
 ```
 
-> Adding content to the mailbody
+> Adding content to the mail body
 
 Can also be specified/overwritten during Set-MDMail
 
@@ -69,11 +69,3 @@ Add-MDMailContent "Backup on server $server failed due to $errorreason"
 ```powershell
 Send-MDMail -TaskName BackupTask
 ```
-
-# Project Status
-
-## 0.1.0 (2019-02-09)
-
-Alpha Release. It "Should" do the job and do it well enough. Expect some changes based on feedback, some possibly breaking, until the first full 1.0.0 release.
-
-After release as 1.0.0, it will be under the same [breaking change policy](https://github.com/PowershellFrameworkCollective/psframework/blob/development/PSFramework/The%20PSFramework%20Reliability%20Promise.md) as the PSFramework.
