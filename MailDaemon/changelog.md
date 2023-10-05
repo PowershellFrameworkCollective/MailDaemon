@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## 1.0.1 (2023-10-06)
+
++ Fix: Invoke-MDDaemon - errors trying to multiply timespan
+
 ## 1.0.0 (2023-10-05)
 
 + General: Project Upgrade to the latest project template (including the tests).
