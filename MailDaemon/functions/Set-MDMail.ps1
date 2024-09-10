@@ -1,4 +1,10 @@
-﻿function Set-MDMail
+﻿enum MailPriority {
+    Normal
+    Low
+    High
+}
+
+function Set-MDMail
 {
 	<#
 		.SYNOPSIS
@@ -49,12 +55,15 @@
 		[string]
 		$From,
 
-		[string]
+		[string[]]
 		$To,
 
 		[string[]]
 		$Cc,
 
+		[string[]]
+		$Bcc,
+		
 		[string]
 		$Subject,
 
@@ -64,14 +73,17 @@
 		[switch]
 		$BodyAsHtml,
 
-		[string]
+		[string[]]
 		$Attachments,
 
 		[switch]
 		$RemoveAttachments,
 
 		[datetime]
-		$NotBefore
+		$NotBefore, 
+		
+		[MailPriority]
+		$Priority
 	)
 	
 	begin
@@ -86,11 +98,13 @@
 		if ($From) { $script:mail["From"] = $From }
 		if ($To) { $script:mail["To"] = $To }
 		if ($Cc) { $script:mail["Cc"] = $Cc }
+		if ($Bcc) { $script:mail["Bcc"] = $Bcc }
 		if ($Subject) { $script:mail["Subject"] = $Subject }
 		if ($Body) { $script:mail["Body"] = $Body }
 		if ($BodyAsHtml.IsPresent) { $script:mail["BodyAsHtml"] = ([bool]$BodyAsHtml) }
 		if ($Attachments) { $script:mail["Attachments"] = $Attachments }
 		if ($RemoveAttachments.IsPresent) { $script:mail["RemoveAttachments"] = ([bool]$RemoveAttachments) }
 		if ($NotBefore) { $script:mail["NotBefore"] = $NotBefore }
+		if ($Priority) { $script:mail["Priority"] = $Priority }
 	}
 }

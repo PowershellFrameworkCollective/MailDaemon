@@ -53,8 +53,10 @@
 			if ($email.From) { $parameters["From"] = $email.From }
 			else { $parameters["From"] = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SenderDefault' }
 			if ($email.Cc) { $parameters["Cc"] = $email.Cc }
+			if ($email.Bcc) { $parameters["Bcc"] = $email.Bcc }
 			if ($email.Subject) { $parameters["Subject"] = $email.Subject }
 			else { $parameters["Subject"] = "<no subject>" }
+			if ($email.Priority) {$parameters["Priority"] = $email.Priority}
 			if ($email.Body) { $parameters["Body"] = $email.Body }
 			if ($null -ne $email.BodyAsHtml) { $parameters["BodyAsHtml"] = $email.BodyAsHtml }
 			if ($email.Attachments) {
