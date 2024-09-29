@@ -36,7 +36,7 @@
 	process
 	{
 		#region Send mails
-		foreach ($item in (Get-ChildItem -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')))
+		foreach ($item in (Get-ChildItem -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath') -Filter "*.clixml"))
 		{
 			$email = Import-Clixml -Path $item.FullName
 			# Skip emails that should not yet be processed
@@ -53,11 +53,29 @@
 			if ($email.From) { $parameters["From"] = $email.From }
 			else { $parameters["From"] = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SenderDefault' }
 			if ($email.Cc) { $parameters["Cc"] = $email.Cc }
+			if ($email.Bcc) { $parameters["Bcc"] = $email.Bcc }
 			if ($email.Subject) { $parameters["Subject"] = $email.Subject }
 			else { $parameters["Subject"] = "<no subject>" }
+			if ($email.Priority) {$parameters["Priority"] = $email.Priority}
 			if ($email.Body) { $parameters["Body"] = $email.Body }
 			if ($null -ne $email.BodyAsHtml) { $parameters["BodyAsHtml"] = $email.BodyAsHtml }
-			if ($email.Attachments) { $parameters["Attachments"] = $email.Attachments }
+			if ($email.Attachments) {
+			    if ($email.AttachmentsBinary) {
+			        $tempAttachmentParentDir = New-Item (join-path $item.Directory $item.BaseName) -Force -ItemType Directory
+			        $attachmentCounter = 0
+			        $parameters["Attachments"] = @()
+			        # Using multiple subfolders to allow for duplicate attachment names
+			        foreach ($binaryAttachment in $email.AttachmentsBinary) {
+			            $tempAttachmentDir = new-item (join-path $tempAttachmentParentDir $attachmentCounter) -Force -ItemType Directory
+			            $tempAttachmentPath = join-path $tempAttachmentDir $binaryAttachment.Name
+			            $null = [System.IO.File]::WriteAllBytes($tempAttachmentPath, $binaryAttachment.Data)
+			            $parameters["Attachments"] = @($parameters["Attachments"]) + $tempAttachmentPath
+			            $attachmentCounter = $attachmentCounter + 1
+			        }
+			    } else {
+                    $parameters["Attachments"] = $email.Attachments
+			    }
+            }
 			if ($script:_Config.SenderCredentialPath) { $parameters["Credential"] = Import-Clixml (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SenderCredentialPath') }
 			
 			Write-PSFMessage -Level Verbose -String 'Invoke-MDDaemon.SendMail.Start' -StringValues @($email.Taskname, $parameters['Subject'], $parameters['From'], ($parameters['To'] -join ",")) -Target $email.Taskname
@@ -73,6 +91,10 @@
 					Remove-Item $attachment -Force
 				}
 			}
+			# Remove temp deserialized attachments if used 
+            if ($email.AttachmentsBinary) {
+                $null = remove-item -Path $tempAttachmentParentDir -Recurse -Force
+            }
 
 			# Update the timestamp (the timeout for deletion uses this) and move it to the sent items folder
 			$item.LastWriteTime = Get-Date

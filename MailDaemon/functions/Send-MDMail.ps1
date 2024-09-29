@@ -11,6 +11,9 @@
 			Name of the task that is sending the email.
 			Used in the name of the file used to queue messages in order to reduce likelyhood of accidental clash.
 		
+		.PARAMETER PersistAttachments
+            Attachments will be serialized with the queued email allowing the source files to be removed immediately.
+			
 		.EXAMPLE
 			PS C:\> Send-MDMail -TaskName "Logrotate"
 
@@ -20,7 +23,8 @@
 	Param (
 		[Parameter(Mandatory = $true)]
 		[string]
-		$TaskName
+		$TaskName,
+		[switch]$PersistAttachments
 	)
 	
 	begin
@@ -42,9 +46,19 @@
 
 		$script:mail['Taskname'] = $TaskName
 		
+		if ($PersistAttachments) {
+		    # Add the attachments bytes to the mail object
+            if (-not $script:mail["AttachmentsBinary"]) {
+                $script:mail["AttachmentsBinary"] = @()
+            } 
+		    foreach ($attachment in $script:mail['Attachments']) {
+                $script:mail['AttachmentsBinary'] = @($script:mail['AttachmentsBinary']) + @{Name = (split-path -Path $attachment -Leaf); Data = [System.IO.File]::ReadAllBytes($attachment)}
+		    }
+		}
+		
 		# Send the email
 		Write-PSFMessage -String 'Send-MDMail.Email.Sending' -StringValues $TaskName -Target $TaskName
-		try { [PSCustomObject]$script:mail | Export-Clixml -Path "$(Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')\$($TaskName)-$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').clixml" -ErrorAction Stop }
+		try { [PSCustomObject]$script:mail | Export-Clixml -Path "$(Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')\$($TaskName)-$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').clixml" -Depth 4 -ErrorAction Stop }
 		catch
 		{
 			Stop-PSFFunction -String 'Send-MDMail.Email.SendingFailed' -StringValues $TaskName -ErrorRecord $_ -Cmdlet $PSCmdlet -EnableException $true -Target $TaskName
