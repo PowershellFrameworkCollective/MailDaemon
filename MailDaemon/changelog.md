@@ -1,5 +1,10 @@
 ﻿# Changelog
 
+## 1.1.3 (2024-11-11)
+
++ Upd: Added ability to directly embed attachments in the email task, rather than only providing a path to them. (thanks @jebbster88 ; #10)
++ Upd: Added ability to specify mail priority. (thanks @jebbster88 ; #10)
+
 ## 1.0.1 (2023-10-06)
 
 + Fix: Invoke-MDDaemon - errors trying to multiply timespan
