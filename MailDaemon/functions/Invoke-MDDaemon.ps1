@@ -91,7 +91,7 @@
 					Remove-Item $attachment -Force
 				}
 			}
-			# Remove temp deserialized attachments if used 
+			# Remove temp deserialized attachments if used
             if ($email.AttachmentsBinary) {
                 $null = remove-item -Path $tempAttachmentParentDir -Recurse -Force
             }

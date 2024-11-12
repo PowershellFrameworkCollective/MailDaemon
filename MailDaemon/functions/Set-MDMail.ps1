@@ -22,6 +22,9 @@ function Set-MDMail
 		.PARAMETER Cc
 			Additional addresses to keep in the information flow.
 
+		.PARAMETER Bcc
+			Additional addresses to keep silently informed
+
 		.PARAMETER Subject
 			The subject to send the email under.
 
@@ -43,6 +46,9 @@ function Set-MDMail
 
 		.PARAMETER NotBefore
 			Do not send this email before this timestamp has come to pass.
+
+		.PARAMETER Priority
+			The priority of the email
 
 		.EXAMPLE
 			PS C:\> Set-MDMail -From 'script@contoso.com' -To 'support@contoso.com' -Subject 'Daily Update Report' -Body $body
@@ -80,7 +86,7 @@ function Set-MDMail
 		$RemoveAttachments,
 
 		[datetime]
-		$NotBefore, 
+		$NotBefore,
 		
 		[MailPriority]
 		$Priority

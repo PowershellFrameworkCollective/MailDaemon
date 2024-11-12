@@ -50,7 +50,7 @@
 		    # Add the attachments bytes to the mail object
             if (-not $script:mail["AttachmentsBinary"]) {
                 $script:mail["AttachmentsBinary"] = @()
-            } 
+            }
 		    foreach ($attachment in $script:mail['Attachments']) {
                 $script:mail['AttachmentsBinary'] = @($script:mail['AttachmentsBinary']) + @{Name = (split-path -Path $attachment -Leaf); Data = [System.IO.File]::ReadAllBytes($attachment)}
 		    }
