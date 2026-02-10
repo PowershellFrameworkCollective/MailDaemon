@@ -21,7 +21,7 @@
 	Description = 'Mail Daemon as PowerShell Module'
 	
 	# Minimum version of the Windows PowerShell engine required by this module
-	PowerShellVersion = '5.0'
+	PowerShellVersion = '5.1'
 	
 	# Modules that must be imported into the global environment prior to importing
 	# this module
