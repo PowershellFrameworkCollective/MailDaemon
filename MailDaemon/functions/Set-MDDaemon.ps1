@@ -28,6 +28,9 @@
 	
 	.PARAMETER SenderCredentialPath
 		The path to where the credentials file can be found, that should be used by the daemon.
+
+	.PARAMETER UseSSL
+		Use SSL for sending emails.
 	
 	.PARAMETER ComputerName
 		The computer(s) to work against.

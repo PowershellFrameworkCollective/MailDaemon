@@ -56,6 +56,9 @@
 	.PARAMETER RecipientDefault
 		Default email address to send the email to, if the individual script queuing the email does not specify one.
 	
+	.PARAMETER UseSSL
+		Use SSL for sending emails.
+
 	.EXAMPLE
 		PS C:\> Install-MDDaemon -ComputerName DC1, DC2, DC3 -TaskUser $cred -DaemonUser "DOMAIN\MailDaemon" -SmtpServer 'mail.domain.org' -SenderDefault 'daemon@domain.org' -RecipientDefault 'helpdesk-t2@domain.org'
 		
