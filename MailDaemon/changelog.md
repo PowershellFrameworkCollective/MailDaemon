@@ -1,6 +1,6 @@
 ﻿# Changelog
 
-## ???
+## 1.1.7 (2026-02-10)
 
 + Upd: Invoke-MDDaemon - implements `UseSSL` as configured
 + Upd: Set-MDDaemon - supports `-UseSSL`
