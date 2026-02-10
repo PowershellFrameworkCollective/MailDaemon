@@ -5,3 +5,4 @@ Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.SmtpServer' -Value "mail.$($env
 Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.SenderDefault' -Value "maildaemon@$($env:USERDNSDOMAIN)" -Initialize -Validation 'string' -SimpleExport -Description "The default sending email address."
 Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.SenderCredentialPath' -Value '' -Initialize -Validation 'string' -SimpleExport -Description "The path to the credentials to use for authenticated mail sending."
 Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.RecipientDefault' -Value "support@$($env:USERDNSDOMAIN)" -Initialize -Validation 'string' -SimpleExport -Description "The default recipient to receive emails."
+Set-PSFConfig -Module 'MailDaemon' -Name 'Daemon.UseSSL' -Value $false -Initialize -Validation 'bool' -SimpleExport -Description "Whether mails should be sent using SSL."

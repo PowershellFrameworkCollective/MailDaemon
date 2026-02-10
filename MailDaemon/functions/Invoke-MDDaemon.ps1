@@ -48,6 +48,7 @@
 				Encoding = ([System.Text.Encoding]::UTF8)
 				ErrorAction = 'Stop'
 			}
+			if (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.UseSSL' -Fallback $false) { $parameters['UseSSL'] = $true }
 			if ($email.To) { $parameters["To"] = $email.To }
 			else { $parameters["To"] = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.RecipientDefault' }
 			if ($email.From) { $parameters["From"] = $email.From }

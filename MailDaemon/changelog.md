@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## ???
+
++ Upd: Invoke-MDDaemon - implements `UseSSL` as configured
++ Upd: Set-MDDaemon - supports `-UseSSL`
++ Upd: Install-MDDaemon - supports `-UseSSL`
++ Fix: Install-MDDaemon - now exports credentials without prompting.
+
 ## 1.1.3 (2024-11-11)
 
 + Upd: Added ability to directly embed attachments in the email task, rather than only providing a path to them. (thanks @jebbster88 ; #10)

@@ -66,6 +66,9 @@
 		
 		[string]
 		$SenderCredentialPath,
+
+		[switch]
+		$UseSSL,
 		
 		[Parameter(ValueFromPipeline = $true)]
 		[PSFComputer[]]
@@ -106,6 +109,7 @@
 					'SenderDefault' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.SenderDefault' -Value $Parameters[$key] }
 					'SenderCredentialPath' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.SenderCredentialPath' -Value $Parameters[$key] }
 					'RecipientDefault' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.RecipientDefault' -Value $Parameters[$key] }
+					'UseSSL' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.UseSSL' -Value $Parameters[$key].ToBool() }
 				}
 			}
 			
@@ -113,14 +117,7 @@
 		}
 		#endregion Configuration Script
 		
-		#region Prepare parameters to pass through
-		$parameters = @{ }
-		foreach ($key in $PSBoundParameters.Keys)
-		{
-			if ($key -in 'ComputerName', 'Credential') { continue }
-			$parameters[$key] = $PSBoundParameters[$key]
-		}
-		#endregion Prepare parameters to pass through
+		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Exclude ComputerName, Credential
 	}
 	process
 	{

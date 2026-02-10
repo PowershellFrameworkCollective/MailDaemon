@@ -1,6 +1,5 @@
-﻿function Install-MDDaemon
-{
-<#
+﻿function Install-MDDaemon {
+	<#
 	.SYNOPSIS
 		Configures a computer for using the Mail Daemon
 	
@@ -103,11 +102,13 @@
 		$SenderCredential,
 		
 		[string]
-		$RecipientDefault
+		$RecipientDefault,
+
+		[switch]
+		$UseSSL
 	)
 	
-	begin
-	{
+	begin {
 		#region Repetitions (ugly)
 		# Specifying repetitions directly in the commandline is ugly.
 		# It ignores explicit settings and requires copying the repetition object from another task.
@@ -155,8 +156,7 @@
 		#endregion Repetitions (ugly)
 		
 		#region Setup Task Configuration
-		if (-not $NoTask)
-		{
+		if (-not $NoTask) {
 			$action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -Command Invoke-MDDaemon"
 			$triggers = @()
 			$triggers += New-ScheduledTaskTrigger -AtStartup -RandomDelay "00:15:00"
@@ -173,8 +173,7 @@
 				TaskName    = 'MailDaemon'
 				InputObject = $taskItem
 			}
-			if ($TaskUser)
-			{
+			if ($TaskUser) {
 				$parametersRegister["User"] = $TaskUser.UserName
 				$parametersRegister["Password"] = $TaskUser.GetNetworkCredential().Password
 			}
@@ -182,12 +181,7 @@
 		#endregion Setup Task Configuration
 		
 		#region Preparing Parameters
-		$parameters = @{ }
-		foreach ($key in $PSBoundParameters.Keys)
-		{
-			if ($key -notin 'PickupPath', 'SentPath', 'MailSentRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault') { continue }
-			$parameters[$key] = $PSBoundParameters[$key]
-		}
+		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Include 'PickupPath', 'SentPath', 'MailSentRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault', 'UseSSL'
 		
 		$paramMainInstallCall = @{
 			ArgumentList = $parameters
@@ -217,8 +211,7 @@
 		#endregion The Main Setup Scriptblock
 	}
 	
-	process
-	{
+	process {
 		#region Ensure Modules are installed
 		$testResults = Test-Module -ComputerName $ComputerName -Credential $Credential -Module @{
 			MailDaemon  = $script:ModuleVersion
@@ -227,11 +220,9 @@
 		
 		$failedTests = $testResults | Where-Object Success -EQ $false
 		
-		if ($failedTests)
-		{
+		if ($failedTests) {
 			$grouped = $failedTests | Group-Object Name
-			foreach ($groupSet in $grouped)
-			{
+			foreach ($groupSet in $grouped) {
 				Copy-Module -ModuleName (Get-Module $groupSet.Name).ModuleBase -ToComputer $groupSet.Group.ComputerName
 			}
 		}
@@ -242,13 +233,13 @@
 		Invoke-PSFCommand @paramMainInstallCall
 		
 		#region Securely store credentials
-		if ($PSBoundParameters.ContainsKey('SenderCredential'))
-		{
+		if ($PSBoundParameters.ContainsKey('SenderCredential')) {
 			$parametersSave = @{
-				ComputerName = $ComputerName
-				Credential   = $SenderCredential
-				Path		 = 'C:\ProgramData\PowerShell\MailDaemon\senderCredentials.clixml'
+				ComputerName     = $ComputerName
+				TargetCredential = $SenderCredential
+				Path             = 'C:\ProgramData\PowerShell\MailDaemon\senderCredentials.clixml'
 			}
+			if ($Credential) { $parametersSave['Credential'] = $Credential }
 			if ($TaskUser) { $parametersSave['AccessAccount'] = $TaskUser }
 			Save-MDCredential @parametersSave
 			
@@ -260,10 +251,8 @@
 		#endregion Securely store credentials
 		
 		#region Setup Task
-		if (-not $NoTask)
-		{
-			foreach ($computerObject in $ComputerName)
-			{
+		if (-not $NoTask) {
+			foreach ($computerObject in $ComputerName) {
 				if ($ComputerName.Type -like 'CimSession') { $parametersRegister["CimSession"] = $computerObject.InputObject }
 				elseif (-not $ComputerName.IsLocalhost) { $parametersRegister["CimSession"] = $ComputerName }
 				
