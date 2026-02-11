@@ -99,7 +99,7 @@
 				"$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') : $_" | Set-PSFFileContent -Path ($item.FullName -replace '.clixml', '.txt') -Append
 				#region Abandon Email if beyond threshold
 				if ($item.CreationTime.Add($abandonThreshold) -lt (Get-Date)) {
-					Write-PSFMessage 'Invoke-MDDaemon.SendMail.Abandon' -StringValues $email.Taskname, $abandonThreshold
+					Write-PSFMessage -String 'Invoke-MDDaemon.SendMail.Abandon' -StringValues $email.Taskname, $abandonThreshold
 					$item.LastWriteTime = Get-Date
 					Move-Item -LiteralPath $item.FullName -Destination $failedPath
 					Move-Item -LiteralPath ($item.FullName -replace '.clixml', '.txt') -Destination $failedPath
