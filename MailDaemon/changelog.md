@@ -1,5 +1,14 @@
 ﻿# Changelog
 
+## 1.2.13 (2026-02-11)
+
++ New: Emails that could not be sent will no longer be permanently attempted to resend - after 14 days
++ Upd: Install-MDDaemon - now supports remote-deployment of the daemon task using credentials
++ Upd: Install-MDDaemon - now installs eventlog for MailDaemon
++ Upd: Invoke-MDDaemon - adds logging to the Windows Eventlog by default
++ Fix: Install-MDDaemon - no longer fails when the daemon task already exists
++ Fix: Invoke-MDDaemon - fails to use authentication for SMTP
+
 ## 1.1.7 (2026-02-10)
 
 + Upd: Invoke-MDDaemon - implements `UseSSL` as configured
@@ -25,7 +34,7 @@
 ## 0.1.1 (2019-02-09)
 
 + Fix: Bug in Install-MDDaemon causing errors during installation
- 
+
 ## 0.1.0 (2019-02-09)
 
 + New: Everything

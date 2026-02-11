@@ -24,7 +24,9 @@
 		[Parameter(Mandatory = $true)]
 		[string]
 		$TaskName,
-		[switch]$PersistAttachments
+		
+		[switch]
+		$PersistAttachments
 	)
 	
 	begin

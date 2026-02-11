@@ -1,6 +1,5 @@
-﻿function Set-MDDaemon
-{
-<#
+﻿function Set-MDDaemon {
+	<#
 	.SYNOPSIS
 		Configures the Daemon settings on the target computer(s)
 	
@@ -12,9 +11,18 @@
 	
 	.PARAMETER SentPath
 		The folder in which emails that were successfully sent are stored for a specified time before being deleted.
+
+	.PARAMETER FailedPath
+		The path where mails that could repeatedly not be sent are moved to.
 	
 	.PARAMETER MailSentRetention
 		The time to keep successfully sent emails around.
+
+	.PARAMETER MailAbandonThreshold
+		How long we attempt to send an email before abandoning it and moving it to -FailedPath.
+
+	.PARAMETER MailFailedRetention
+		How long we keep an abandoned email around before removing it entirely.
 	
 	.PARAMETER SmtpServer
 		The mailserver to use for sending emails.
@@ -54,9 +62,18 @@
 		
 		[string]
 		$SentPath,
+
+		[string]
+		$FailedPath,
 		
 		[Timespan]
 		$MailSentRetention,
+
+		[Timespan]
+		$MailAbandonThreshold,
+		
+		[Timespan]
+		$MailFailedRetention,
 		
 		[string]
 		$SmtpServer,
@@ -81,8 +98,7 @@
 		$Credential
 	)
 	
-	begin
-	{
+	begin {
 		#region Configuration Script
 		$configurationScript = {
 			param (
@@ -92,22 +108,24 @@
 			# Import module so settings are initialized
 			if (-not (Get-Module MailDaemon)) { Import-Module MailDaemon }
 			
-			foreach ($key in $Parameters.Keys)
-			{
+			foreach ($key in $Parameters.Keys) {
 				Write-PSFMessage -String 'Set-MDDaemon.UpdateSetting' -StringValues $key, $Parameters[$key]
-				switch ($key)
-				{
-					'PickupPath'
-					{
+				switch ($key) {
+					'PickupPath' {
 						Set-PSFConfig -Module MailDaemon -Name 'Daemon.MailPickupPath' -Value $Parameters[$key]
 						if (-not (Test-Path $Parameters[$key])) { $null = New-Item $Parameters[$key] -Force -ItemType Directory }
 					}
-					'SentPath'
-					{
+					'SentPath' {
 						Set-PSFConfig -Module MailDaemon -Name 'Daemon.MailSentPath' -Value $Parameters[$key]
 						if (-not (Test-Path $Parameters[$key])) { $null = New-Item $Parameters[$key] -Force -ItemType Directory }
 					}
+					'FailedPath' {
+						Set-PSFConfig -Module MailDaemon -Name 'Daemon.MailFailedPath' -Value $Parameters[$key]
+						if (-not (Test-Path $Parameters[$key])) { $null = New-Item $Parameters[$key] -Force -ItemType Directory }
+					}
 					'MailSentRetention' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.MailSentRetention' -Value $Parameters[$key] }
+					'MailAbandonThreshold' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.MailAbandonThreshold' -Value $Parameters[$key] }
+					'MailFailedRetention' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.MailFailedRetention' -Value $Parameters[$key] }
 					'SmtpServer' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.SmtpServer' -Value $Parameters[$key] }
 					'SenderDefault' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.SenderDefault' -Value $Parameters[$key] }
 					'SenderCredentialPath' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.SenderCredentialPath' -Value $Parameters[$key] }
@@ -122,14 +140,12 @@
 		
 		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Exclude ComputerName, Credential
 	}
-	process
-	{
+	process {
 		#region Modules must be installed and current
 		if ($moduleResult = Test-Module -ComputerName $ComputerName -Credential $Credential -Module @{
 				MailDaemon  = $script:ModuleVersion
 				PSFramework = (Get-Module -Name PSFramework).Version
-			} | Where-Object Success -EQ $false)
-		{
+			} | Where-Object Success -EQ $false) {
 			Stop-PSFFunction -String 'General.ModuleMissing' -StringValues ($moduleResult.ComputerName -join ", ") -EnableException $true -Cmdlet $PSCmdlet
 		}
 		#endregion Modules must be installed and current
