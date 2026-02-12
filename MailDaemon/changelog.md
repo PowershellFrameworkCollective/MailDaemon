@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## 1.2.14 (2026-02-12)
+
++ Fix: Update-MDFolderPermission - does not set permissions for the failed folder
+
 ## 1.2.13 (2026-02-11)
 
 + New: Emails that could not be sent will no longer be permanently attempted to resend - after 14 days

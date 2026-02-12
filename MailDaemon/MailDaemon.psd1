@@ -3,7 +3,7 @@
 	RootModule = 'MailDaemon.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.2.13'
+	ModuleVersion = '1.2.14'
 	
 	# ID used to uniquely identify this module
 	GUID = 'd5ba333f-5210-4d69-83f0-150dd0909139'
