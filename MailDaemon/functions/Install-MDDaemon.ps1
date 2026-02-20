@@ -1,6 +1,5 @@
-﻿function Install-MDDaemon
-{
-<#
+﻿function Install-MDDaemon {
+	<#
 	.SYNOPSIS
 		Configures a computer for using the Mail Daemon
 	
@@ -31,6 +30,9 @@
 	
 	.PARAMETER SentPath
 		The folder in which emails that were successfully sent are stored for a specified time before being deleted.
+
+	.PARAMETER FailedPath
+		The path where mails that could repeatedly not be sent are moved to.
 	
 	.PARAMETER DaemonUser
 		The user to grant permissions needed to function as the Daemon account.
@@ -42,6 +44,12 @@
 	
 	.PARAMETER MailSentRetention
 		The time to keep successfully sent emails around.
+
+	.PARAMETER MailAbandonThreshold
+		How long we attempt to send an email before abandoning it and moving it to -FailedPath.
+
+	.PARAMETER MailFailedRetention
+		How long we keep an abandoned email around before removing it entirely.
 	
 	.PARAMETER SmtpServer
 		The mailserver to use for sending emails.
@@ -57,6 +65,13 @@
 	.PARAMETER RecipientDefault
 		Default email address to send the email to, if the individual script queuing the email does not specify one.
 	
+	.PARAMETER UseSSL
+		Use SSL for sending emails.
+
+	.PARAMETER NoLogging
+		Disables logging.
+		Unless specified, this setup step will also prepare the windows eventlog by creating a dedicated eventlog for MailDaemon.
+
 	.EXAMPLE
 		PS C:\> Install-MDDaemon -ComputerName DC1, DC2, DC3 -TaskUser $cred -DaemonUser "DOMAIN\MailDaemon" -SmtpServer 'mail.domain.org' -SenderDefault 'daemon@domain.org' -RecipientDefault 'helpdesk-t2@domain.org'
 		
@@ -83,6 +98,9 @@
 		
 		[string]
 		$SentPath,
+
+		[string]
+		$FailedPath,
 		
 		[string]
 		$DaemonUser,
@@ -92,6 +110,12 @@
 		
 		[Timespan]
 		$MailSentRetention,
+
+		[Timespan]
+		$MailAbandonThreshold,
+		
+		[Timespan]
+		$MailFailedRetention,
 		
 		[string]
 		$SmtpServer,
@@ -103,11 +127,16 @@
 		$SenderCredential,
 		
 		[string]
-		$RecipientDefault
+		$RecipientDefault,
+
+		[switch]
+		$UseSSL,
+
+		[switch]
+		$NoLogging
 	)
 	
-	begin
-	{
+	begin {
 		#region Repetitions (ugly)
 		# Specifying repetitions directly in the commandline is ugly.
 		# It ignores explicit settings and requires copying the repetition object from another task.
@@ -155,9 +184,9 @@
 		#endregion Repetitions (ugly)
 		
 		#region Setup Task Configuration
-		if (-not $NoTask)
-		{
+		if (-not $NoTask) {
 			$action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -Command Invoke-MDDaemon"
+			if ($NoLogging) { $action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -Command Invoke-MDDaemon -NoLogging" }
 			$triggers = @()
 			$triggers += New-ScheduledTaskTrigger -AtStartup -RandomDelay "00:15:00"
 			$triggers += New-ScheduledTaskTrigger -At "00:00:00" -Daily
@@ -173,8 +202,7 @@
 				TaskName    = 'MailDaemon'
 				InputObject = $taskItem
 			}
-			if ($TaskUser)
-			{
+			if ($TaskUser) {
 				$parametersRegister["User"] = $TaskUser.UserName
 				$parametersRegister["Password"] = $TaskUser.GetNetworkCredential().Password
 			}
@@ -182,12 +210,7 @@
 		#endregion Setup Task Configuration
 		
 		#region Preparing Parameters
-		$parameters = @{ }
-		foreach ($key in $PSBoundParameters.Keys)
-		{
-			if ($key -notin 'PickupPath', 'SentPath', 'MailSentRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault') { continue }
-			$parameters[$key] = $PSBoundParameters[$key]
-		}
+		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Include 'PickupPath', 'SentPath', 'FailedPath', 'MailSentRetention', 'MailAbandonThreshold', 'MailFailedRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault', 'UseSSL'
 		
 		$paramMainInstallCall = @{
 			ArgumentList = $parameters
@@ -217,8 +240,7 @@
 		#endregion The Main Setup Scriptblock
 	}
 	
-	process
-	{
+	process {
 		#region Ensure Modules are installed
 		$testResults = Test-Module -ComputerName $ComputerName -Credential $Credential -Module @{
 			MailDaemon  = $script:ModuleVersion
@@ -227,11 +249,9 @@
 		
 		$failedTests = $testResults | Where-Object Success -EQ $false
 		
-		if ($failedTests)
-		{
+		if ($failedTests) {
 			$grouped = $failedTests | Group-Object Name
-			foreach ($groupSet in $grouped)
-			{
+			foreach ($groupSet in $grouped) {
 				Copy-Module -ModuleName (Get-Module $groupSet.Name).ModuleBase -ToComputer $groupSet.Group.ComputerName
 			}
 		}
@@ -242,33 +262,45 @@
 		Invoke-PSFCommand @paramMainInstallCall
 		
 		#region Securely store credentials
-		if ($PSBoundParameters.ContainsKey('SenderCredential'))
-		{
+		if ($PSBoundParameters.ContainsKey('SenderCredential')) {
 			$parametersSave = @{
-				ComputerName = $ComputerName
-				Credential   = $SenderCredential
-				Path		 = 'C:\ProgramData\PowerShell\MailDaemon\senderCredentials.clixml'
+				ComputerName     = $ComputerName
+				TargetCredential = $SenderCredential
+				Path             = 'C:\ProgramData\PowerShell\MailDaemon\senderCredentials.clixml'
 			}
+			if ($Credential) { $parametersSave['Credential'] = $Credential }
 			if ($TaskUser) { $parametersSave['AccessAccount'] = $TaskUser }
 			Save-MDCredential @parametersSave
 			
-			$parametersInvoke = @{ $parametersInvoke['ComputerName'] = $ComputerName }
+			$parametersInvoke = @{ ComputerName = $ComputerName }
+			if ($Credential) { $parametersInvoke['Credential'] = $Credential }
 			Invoke-PSFCommand @parametersInvoke -ScriptBlock {
 				Set-MDDaemon -SenderCredentialPath "C:\ProgramData\PowerShell\MailDaemon\senderCredentials.clixml"
 			}
 		}
 		#endregion Securely store credentials
+
+		#region Setup Logging
+		if (-not $NoLogging) {
+			Invoke-PSFCommand @parametersInvoke -ScriptBlock {
+				if ($PSVersionTable.PSVersion.Major -gt 5 -and -not $IsWindows) { return }
+				Set-PSFLoggingProvider -Name eventlog -InstanceName MailDaemonInvoke -LogName MailDaemon -Source MailDaemon -Enabled $true -Wait
+				Write-PSFMessage -Message "Setting up MailDaemon logging"
+				Disable-PSFLoggingProvider -Name eventlog -InstanceName MailDaemonInvoke
+			}
+		}
+		#endregion Setup Logging
 		
 		#region Setup Task
-		if (-not $NoTask)
-		{
-			foreach ($computerObject in $ComputerName)
-			{
-				if ($ComputerName.Type -like 'CimSession') { $parametersRegister["CimSession"] = $computerObject.InputObject }
-				elseif (-not $ComputerName.IsLocalhost) { $parametersRegister["CimSession"] = $ComputerName }
-				
-				$null = Register-ScheduledTask @parametersRegister
-			}
+		if (-not $NoTask) {
+			Invoke-PSFCommand @parametersInvoke -ScriptBlock {
+				param ($ParametersRegister)
+
+				$taskObject = Get-ScheduledTask -TaskName $ParametersRegister.TaskName -ErrorAction Ignore
+				if ($taskObject) { $taskObject | Unregister-ScheduledTask }
+
+				$null = Register-ScheduledTask @ParametersRegister
+			} -ArgumentList $parametersRegister
 		}
 		#endregion Setup Task
 	}

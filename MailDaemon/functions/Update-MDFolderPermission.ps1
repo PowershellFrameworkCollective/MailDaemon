@@ -62,8 +62,9 @@
 			
 			Import-Module MailDaemon
 			
-			$pickupPath = (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')
-			$sentPath = (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentPath')
+			$pickupPath = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath'
+			$sentPath = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailSentPath'
+			$failedPath = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailFailedPath'
 			
 			if ($DaemonUser.Trim())
 			{
@@ -76,6 +77,9 @@
 				$acl = Get-Acl -Path $sentPath
 				$acl.AddAccessRule($rule)
 				$acl | Set-Acl -Path $sentPath
+				$acl = Get-Acl -Path $failedPath
+				$acl.AddAccessRule($rule)
+				$acl | Set-Acl -Path $failedPath
 			}
 			foreach ($user in $WriteUser)
 			{
