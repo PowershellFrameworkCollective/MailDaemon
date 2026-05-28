@@ -13,6 +13,10 @@
 		
 		.PARAMETER PersistAttachments
             Attachments will be serialized with the queued email allowing the source files to be removed immediately.
+
+		.PARAMETER DontTrigger
+			Do not trigger the task that sends the email.
+			By default, after submitting an email for delivery, it will immediately trigger the scheduled task to send it.
 			
 		.EXAMPLE
 			PS C:\> Send-MDMail -TaskName "Logrotate"
@@ -26,7 +30,10 @@
 		$TaskName,
 		
 		[switch]
-		$PersistAttachments
+		$PersistAttachments,
+
+		[switch]
+		$DontTrigger
 	)
 	
 	begin
@@ -60,7 +67,7 @@
 		
 		# Send the email
 		Write-PSFMessage -String 'Send-MDMail.Email.Sending' -StringValues $TaskName -Target $TaskName
-		try { [PSCustomObject]$script:mail | Export-Clixml -Path "$(Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')\$($TaskName)-$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').clixml" -Depth 4 -ErrorAction Stop }
+		try { [PSCustomObject]$script:mail | Export-PSFClixml -Path "$(Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath')\$($TaskName)-$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').clixml" -Depth 4 -ErrorAction Stop }
 		catch
 		{
 			Stop-PSFFunction -String 'Send-MDMail.Email.SendingFailed' -StringValues $TaskName -ErrorRecord $_ -Cmdlet $PSCmdlet -EnableException $true -Target $TaskName
@@ -68,6 +75,8 @@
 
 		# Reset email, now that it is queued
 		$script:mail = $null
+
+		if ($DontTrigger) { return }
 
 		try { Start-ScheduledTask -TaskName MailDaemon -ErrorAction Stop }
 		catch

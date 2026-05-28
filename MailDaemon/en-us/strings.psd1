@@ -5,6 +5,7 @@
 	'General.ModuleMissing'                         = 'The MailDaemon module could not be found in sufficient version on: {0}. Terminating Execution. To install or update to the current version, use Install-MDDaemon or access the PSGallery directly using "Install-Module MailDaemon".'
 	
 	# Invoke-MDDaemon
+	'Invoke-MDDaemon.Error.General'                 = 'An error happened while processing pending emails'
 	'Invoke-MDDaemon.SendMail.Abandon'              = '{0} - Abandoning email after failing to send it within the configured timespan ({1})' # $email.Taskname, $abandonThreshold
 	'Invoke-MDDaemon.SendMail.Start'                = '{0} - Sending Mail: "{1}" From {2} to {3}'
 	'Invoke-MDDaemon.SendMail.Failed'               = '{0} - Failed to send email!'
@@ -30,4 +31,8 @@
 	# Update-MDFolderPermission
 	'Update-MDFolderPermission.Granting.DaemonUser' = 'Assigning write permissions as daemon account to {0} on "{1}" and "{2}"'
 	'Update-MDFolderPermission.Granting.WriteUser'  = 'Assigning write permissions as mail submitter to {0} on "{1}"'
+
+	# Connect-MDGraph
+	'Connect-MDGraph.Error.NoAuthPath'              = 'Failed to connect to Entra & Graph: None of the required authentication options were specified! Use Set-MDDaemon to configure a certificate or federated credetnials!'
+	'Connect-MDGraph.Error.NoClientIDorTenantID'    = 'Failed to connect to Entra & Graph: ClientID or TenantID were missing and must be provided!'
 }
