@@ -73,7 +73,7 @@
 		
 		[Parameter(Mandatory = $true, ParameterSetName = 'Hash')]
 		[hashtable]
-		$Module = @{ },
+		$Module,
 		
 		[ValidateSet('LesserThan', 'LesserEqual', 'Equal', 'GreaterEqual', 'GreaterThan')]
 		[string]
