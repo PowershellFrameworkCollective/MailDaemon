@@ -68,6 +68,27 @@
 	.PARAMETER UseSSL
 		Use SSL for sending emails.
 
+	.PARAMETER ClientID
+		The ClientID of the Application to use for sending emails via Graph API.
+
+	.PARAMETER TenantID
+		The TenantID of the Application to use for sending emails via Graph API.
+
+	.PARAMETER Identity
+		When authenticating to Entra for sending emails via Graph API, use the current Managed Identity to authenticate.
+
+	.PARAMETER Federated
+		When authenticating to Entra for sending emails via Graph API, use Federated Credentials to authenticate.
+		This uses the current Managed Identity to get a token they can use to authenticate to the application with the actual permissions.
+
+	.PARAMETER CertificateThumbprint
+		When authenticating to Entra for sending emails via Graph API, use the certificate with the specified thumbprint.
+		The certificate must be stored in one of the local certificate stores.
+
+	.PARAMETER CertificateName
+		When authenticating to Entra for sending emails via Graph API, use the newest certificate with the specified subject.
+		The certificate must be stored in one of the local certificate stores.
+
 	.PARAMETER NoLogging
 		Disables logging.
 		Unless specified, this setup step will also prepare the windows eventlog by creating a dedicated eventlog for MailDaemon.
@@ -131,6 +152,24 @@
 
 		[switch]
 		$UseSSL,
+
+		[string]
+		$ClientID,
+
+		[string]
+		$TenantID,
+
+		[switch]
+		$Identity,
+
+		[switch]
+		$Federated,
+
+		[string]
+		$CertificateThumbprint,
+
+		[string]
+		$CertificateName,
 
 		[switch]
 		$NoLogging
@@ -210,7 +249,8 @@
 		#endregion Setup Task Configuration
 		
 		#region Preparing Parameters
-		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Include 'PickupPath', 'SentPath', 'FailedPath', 'MailSentRetention', 'MailAbandonThreshold', 'MailFailedRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault', 'UseSSL'
+		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Include 'PickupPath', 'SentPath', 'FailedPath', 'MailSentRetention', 'MailAbandonThreshold', 'MailFailedRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault', 'UseSSL', 'ClientID', 'TenantID', 'Identity', 'Federated', 'CertificateThumbprint', 'CertificateName'
+		if ($parameters.Federated -or $parameters.Identity -or $parameters.ClientID) { $parameters.Type = 'Graph' }
 		
 		$paramMainInstallCall = @{
 			ArgumentList = $parameters
@@ -227,7 +267,7 @@
 			Import-Module -Name PSFramework
 			Import-Module -Name MailDaemon
 			
-			Set-MDDaemon @parameters
+			Set-MDDaemon @Parameters
 			
 			#region Set file permissions
 			if (-not (Test-Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath'))) { $null = New-Item (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath') -Force -ItemType Directory }

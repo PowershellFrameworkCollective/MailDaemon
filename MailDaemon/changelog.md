@@ -1,5 +1,13 @@
 ﻿# Changelog
 
+## 1.3.19 (2026-05-28)
+
++ Major: Added capability to send emails by Graph API, rather than SMTP.
++ New: Configuration Setting 'MailDaemon.Daemon.Type' - determins whether to send email by Smtp or Graph.
++ New: Configuration Settings to define Graph behavior: 'MailDaemon.Daemon.Graph.*'
++ Upd: New dependency: EntraAuth - implements the Graph API authentication and interaction.
++ Upd: Mail Tasks are now stored in PSFramework CliDat format to save disk space. New client tasks cannot be processed by old agent versions.
+
 ## 1.2.14 (2026-02-12)
 
 + Fix: Update-MDFolderPermission - does not set permissions for the failed folder

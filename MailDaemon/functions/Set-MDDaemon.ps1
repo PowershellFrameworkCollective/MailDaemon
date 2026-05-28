@@ -23,6 +23,12 @@
 
 	.PARAMETER MailFailedRetention
 		How long we keep an abandoned email around before removing it entirely.
+
+	.PARAMETER Type
+		In what fundamental way should emails be sent?
+		- SMTP: Via classic SMTP relay (authenticated or not so)
+		- Graph: Via Graph API (using Application authentication)
+		The different modes need different configuration parameters.
 	
 	.PARAMETER SmtpServer
 		The mailserver to use for sending emails.
@@ -39,6 +45,27 @@
 
 	.PARAMETER UseSSL
 		Use SSL for sending emails.
+
+	.PARAMETER ClientID
+		The ClientID of the Application to use for sending emails via Graph API.
+
+	.PARAMETER TenantID
+		The TenantID of the Application to use for sending emails via Graph API.
+
+	.PARAMETER Identity
+		When authenticating to Entra for sending emails via Graph API, use the current Managed Identity to authenticate.
+
+	.PARAMETER Federated
+		When authenticating to Entra for sending emails via Graph API, use Federated Credentials to authenticate.
+		This uses the current Managed Identity to get a token they can use to authenticate to the application with the actual permissions.
+
+	.PARAMETER CertificateThumbprint
+		When authenticating to Entra for sending emails via Graph API, use the certificate with the specified thumbprint.
+		The certificate must be stored in one of the local certificate stores.
+
+	.PARAMETER CertificateName
+		When authenticating to Entra for sending emails via Graph API, use the newest certificate with the specified subject.
+		The certificate must be stored in one of the local certificate stores.
 	
 	.PARAMETER ComputerName
 		The computer(s) to work against.
@@ -74,6 +101,10 @@
 		
 		[Timespan]
 		$MailFailedRetention,
+
+		[ValidateSet('Graph', 'Smtp')]
+		[string]
+		$Type,
 		
 		[string]
 		$SmtpServer,
@@ -89,6 +120,24 @@
 
 		[switch]
 		$UseSSL,
+
+		[string]
+		$ClientID,
+
+		[string]
+		$TenantID,
+
+		[switch]
+		$Identity,
+
+		[switch]
+		$Federated,
+
+		[string]
+		$CertificateThumbprint,
+
+		[string]
+		$CertificateName,
 		
 		[Parameter(ValueFromPipeline = $true)]
 		[PSFComputer[]]
@@ -131,6 +180,13 @@
 					'SenderCredentialPath' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.SenderCredentialPath' -Value $Parameters[$key] }
 					'RecipientDefault' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.RecipientDefault' -Value $Parameters[$key] }
 					'UseSSL' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.UseSSL' -Value $Parameters[$key].ToBool() }
+					'Type' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.Type' -Value $Parameters[$key] }
+					'ClientID' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.Graph.ClientID' -Value $Parameters[$key] }
+					'TenantID' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.Graph.TenantID' -Value $Parameters[$key] }
+					'Identity' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.Graph.Identity' -Value $Parameters[$key] }
+					'Federated' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.Graph.Federated' -Value $Parameters[$key] }
+					'CertificateThumbprint' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.Graph.CertificateThumbprint' -Value $Parameters[$key] }
+					'CertificateName' { Set-PSFConfig -Module MailDaemon -Name 'Daemon.Graph.CertificateName' -Value $Parameters[$key] }
 				}
 			}
 			
@@ -139,10 +195,11 @@
 		#endregion Configuration Script
 		
 		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Exclude ComputerName, Credential
+		$connect = $PSBoundParameters | ConvertTo-PSFHashtable -Include ComputerName, Credential
 	}
 	process {
 		#region Modules must be installed and current
-		if ($moduleResult = Test-Module -ComputerName $ComputerName -Credential $Credential -Module @{
+		if ($moduleResult = Test-Module @connect -Module @{
 				MailDaemon  = $script:ModuleVersion
 				PSFramework = (Get-Module -Name PSFramework).Version
 			} | Where-Object Success -EQ $false) {
@@ -151,6 +208,6 @@
 		#endregion Modules must be installed and current
 		
 		Write-PSFMessage -String 'Set-MDDaemon.UpdatingSettings' -StringValues ($ComputerName -join ", ")
-		Invoke-PSFCommand -ComputerName $ComputerName -Credential $Credential -ScriptBlock $configurationScript -ArgumentList $parameters
+		Invoke-PSFCommand @connect -ScriptBlock $configurationScript -ArgumentList $parameters
 	}
 }

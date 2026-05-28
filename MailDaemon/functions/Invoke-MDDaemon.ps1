@@ -42,26 +42,34 @@
 		if (-not $NoLogging -and ($PSVersionTable.PSVersion.Major -lt 6 -or $IsWindows)) {
 			Set-PSFLoggingProvider -Name eventlog -InstanceName MailDaemonInvoke -LogName MailDaemon -Source MailDaemon -Enabled $true -Wait
 		}
+
+		$type = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.Type' -Fallback 'Smtp'
+		$useSmtp = 'Smtp' -eq $type
+		$useGraph = 'Graph' -eq $type
 	}
 	process {
 		trap {
+			Write-PSFMessage -Level Warning -String 'Invoke-MDDaemon.Error.General' -ErrorRecord $_
 			Disable-PSFLoggingProvider -Name eventlog -InstanceName MailDaemonInvoke
 			throw $_
 		}
 
+		if ($useGraph) { Connect-MDGraph }
+		
+
 		#region Send mails
 		foreach ($item in (Get-ChildItem -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.MailPickupPath') -Filter "*.clixml")) {
-			$email = Import-Clixml -Path $item.FullName
+			$email = Import-PSFClixml -Path $item.FullName
 			# Skip emails that should not yet be processed
 			if ($email.NotBefore -gt (Get-Date)) { continue }
 
 			# Build email parameters
 			$parameters = @{
-				SmtpServer  = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SmtpServer'
-				Encoding    = ([System.Text.Encoding]::UTF8)
 				ErrorAction = 'Stop'
 			}
-			if (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.UseSSL' -Fallback $false) { $parameters['UseSSL'] = $true }
+			
+			
+			#region General
 			if ($email.To) { $parameters["To"] = $email.To }
 			else { $parameters["To"] = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.RecipientDefault' }
 			if ($email.From) { $parameters["From"] = $email.From }
@@ -91,10 +99,29 @@
 					$parameters["Attachments"] = $email.Attachments
 				}
 			}
-			if (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SenderCredentialPath') { $parameters["Credential"] = Import-Clixml -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SenderCredentialPath') }
+			#endregion General
+
+			#region Smtp
+			if ($useSmtp) {
+				$parameters += @{
+					SmtpServer = Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SmtpServer'
+					Encoding   = [System.Text.Encoding]::UTF8
+				}
+				if (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.UseSSL' -Fallback $false) { $parameters['UseSSL'] = $true }
+				if (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SenderCredentialPath') { $parameters["Credential"] = Import-Clixml -Path (Get-PSFConfigValue -FullName 'MailDaemon.Daemon.SenderCredentialPath') }
+
+				$sendCommand = Get-Command -Name Send-MailMessage
+			}
+			#endregion Smtp
+
+			#region Graph
+			if ($useGraph) {
+				$sendCommand = Get-Command -Name Send-GraphMail
+			}
+			#endregion Graph
 			
 			Write-PSFMessage -Level Verbose -String 'Invoke-MDDaemon.SendMail.Start' -StringValues @($email.Taskname, $parameters['Subject'], $parameters['From'], ($parameters['To'] -join ",")) -Target $email.Taskname
-			try { Send-MailMessage @parameters }
+			try { & $sendCommand @parameters }
 			catch {
 				"$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') : $_" | Set-PSFFileContent -Path ($item.FullName -replace '.clixml', '.txt') -Append
 				#region Abandon Email if beyond threshold
