@@ -136,6 +136,11 @@
 						}
 					}
 				}
+				# Remove temp deserialized attachments if used
+				if ($email.AttachmentsBinary) {
+					$null = Remove-Item -Path $tempAttachmentParentDir -Recurse -Force
+				}
+				
 				#endregion Abandon Email if beyond threshold
 				Stop-PSFFunction -String 'Invoke-MDDaemon.SendMail.Failed' -StringValues $email.Taskname -ErrorRecord $_ -Continue -Target $email.Taskname
 			}

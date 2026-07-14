@@ -154,11 +154,7 @@
 			}
 			#endregion Utility Functions
 			
-			$paths = $env:PSModulePath -split ';'
-			if ($PSVersionTable.PSVersion.Major -gt 5 -and -not $IsWindows) {
-				$paths = $env:PSModulePath -split ':'
-			}
-			$scopedPath = @($paths)[0]
+			$userPath = $HOME
 
 			#region Validate each module specified
 			foreach ($module in $ModuleHash.Keys) {
@@ -166,11 +162,11 @@
 					$Scope -eq 'Any' -or
 					(
 						$Scope -eq 'CurrentUser' -and
-						$_.ModuleBase -like "$($scopedPath)*"
+						$_.ModuleBase -like "$($userPath)*"
 					) -or
 					(
 						$Scope -eq 'AllUsers' -and
-						$_.ModuleBase -notlike "$($scopedPath)*"
+						$_.ModuleBase -notlike "$($userPath)*"
 					)
 				}
 				if ($Quiet -and (-not $modulesFound)) { return $false }

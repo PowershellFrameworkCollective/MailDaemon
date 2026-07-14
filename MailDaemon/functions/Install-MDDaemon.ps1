@@ -93,6 +93,9 @@
 		Disables logging.
 		Unless specified, this setup step will also prepare the windows eventlog by creating a dedicated eventlog for MailDaemon.
 
+	.PARAMETER UsePWSH
+		When setting up the mail daemon task, use PowerShell 7, rather than the default Windows PowerShell
+
 	.EXAMPLE
 		PS C:\> Install-MDDaemon -ComputerName DC1, DC2, DC3 -TaskUser $cred -DaemonUser "DOMAIN\MailDaemon" -SmtpServer 'mail.domain.org' -SenderDefault 'daemon@domain.org' -RecipientDefault 'helpdesk-t2@domain.org'
 		
@@ -254,7 +257,7 @@
 		#endregion Setup Task Configuration
 		
 		#region Preparing Parameters
-		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Include 'PickupPath', 'SentPath', 'FailedPath', 'MailSentRetention', 'MailAbandonThreshold', 'MailFailedRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault', 'UseSSL', 'ClientID', 'TenantID', 'Identity', 'Federated', 'CertificateThumbprint', 'CertificateName'
+		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Include 'PickupPath', 'SentPath', 'FailedPath', 'MailSentRetention', 'MailAbandonThreshold', 'MailFailedRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault', 'UseSSL', 'ClientID', 'TenantID', 'Identity', 'Federated', 'CertificateThumbprint', 'CertificateName', 'DaemonUser','WriteUser'
 		if ($parameters.Federated -or $parameters.Identity -or $parameters.ClientID) { $parameters.Type = 'Graph' }
 		
 		$paramMainInstallCall = @{
@@ -291,7 +294,7 @@
 			MailDaemon  = $script:ModuleVersion
 			PSFramework = (Get-Module -Name PSFramework).Version
 			EntraAuth = (Get-Module -Name EntraAuth).Version
-		}
+		} -Scope AllUsers
 		
 		$failedTests = $testResults | Where-Object Success -EQ $false
 		
