@@ -111,6 +111,6 @@ function Set-MDMail
 		if ($Attachments) { $script:mail["Attachments"] = $Attachments }
 		if ($RemoveAttachments.IsPresent) { $script:mail["RemoveAttachments"] = ([bool]$RemoveAttachments) }
 		if ($NotBefore) { $script:mail["NotBefore"] = $NotBefore }
-		if ($Priority) { $script:mail["Priority"] = $Priority }
+		if ($PSBoundParameters.Keys -contains 'Priority') { $script:mail["Priority"] = $Priority }
 	}
 }

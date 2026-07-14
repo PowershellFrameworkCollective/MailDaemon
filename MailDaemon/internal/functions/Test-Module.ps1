@@ -1,6 +1,5 @@
-﻿function Test-Module
-{
-<#
+﻿function Test-Module {
+	<#
 	.SYNOPSIS
 		Tests for module existence.
 	
@@ -31,6 +30,9 @@
 	
 	.PARAMETER Quiet
 		Disables output objects and instead returns $true if all modules specified meet the requirements, $false if not so.
+
+	.PARAMETER Scope
+		What scope the module has been installed to.
 	
 	.PARAMETER ComputerName
 		The computers on which to test.
@@ -81,6 +83,10 @@
 		
 		[switch]
 		$Quiet,
+
+		[ValidateSet('AllUsers','CurrentUser','Any')]
+		[string]
+		$Scope = 'Any',
 		
 		[Parameter(ValueFromPipeline = $true)]
 		[PSFComputer[]]
@@ -91,16 +97,13 @@
 		$Credential
 	)
 	
-	begin
-	{
+	begin {
 		#region Prepare Module parameter
 		$moduleHash = $Module
-		foreach ($moduleName in $Name)
-		{
+		foreach ($moduleName in $Name) {
 			$moduleHash[$moduleName] = $Version
 		}
-		foreach ($key in ([string[]]$moduleHash.Keys))
-		{
+		foreach ($key in ([string[]]$moduleHash.Keys)) {
 			$moduleHash[$key] = $moduleHash[$key] -as [Version]
 			if (-not $moduleHash[$key]) { $moduleHash[$key] = ([Version]'0.0.0.0') }
 		}
@@ -116,12 +119,14 @@
 				$Test,
 				
 				[bool]
-				$Quiet
+				$Quiet,
+
+				[string]
+				$Scope
 			)
 			
 			#region Utility Functions
-			function Write-Result
-			{
+			function Write-Result {
 				[CmdletBinding()]
 				param (
 					[string]
@@ -140,32 +145,40 @@
 				$result = [bool]$Success
 				
 				[PSCustomObject]@{
-					Name		  = $Name
-					Success	      = $result
+					Name          = $Name
+					Success       = $result
 					VersionsFound = $VersionsFound
 					ComputerName  = $env:COMPUTERNAME
-					Test		  = $Test
+					Test          = $Test
 				}
 			}
 			#endregion Utility Functions
 			
+			$userPath = $HOME
+
 			#region Validate each module specified
-			foreach ($module in $ModuleHash.Keys)
-			{
-				$modulesFound = Get-Module -Name $module -ListAvailable
+			foreach ($module in $ModuleHash.Keys) {
+				$modulesFound = Get-Module -Name $module -ListAvailable | Where-Object {
+					$Scope -eq 'Any' -or
+					(
+						$Scope -eq 'CurrentUser' -and
+						$_.ModuleBase -like "$($userPath)*"
+					) -or
+					(
+						$Scope -eq 'AllUsers' -and
+						$_.ModuleBase -notlike "$($userPath)*"
+					)
+				}
 				if ($Quiet -and (-not $modulesFound)) { return $false }
 				
-				if ($ModuleHash[$module] -le '0.0.0.0')
-				{
+				if ($ModuleHash[$module] -le '0.0.0.0') {
 					Write-Result -Name $module -Success $modulesFound -VersionsFound $modulesFound.Version -Test $Test
 					continue
 				}
 				
 				#region Quiet Validation [Calls Continue]
-				if ($Quiet)
-				{
-					switch ($Test)
-					{
+				if ($Quiet) {
+					switch ($Test) {
 						'LesserThan' { if (-not ($modulesFound | Where-Object Version -LT $ModuleHash[$module])) { return $false } }
 						'LesserEqual' { if (-not ($modulesFound | Where-Object Version -LE $ModuleHash[$module])) { return $false } }
 						'Equal' { if (-not ($modulesFound | Where-Object Version -EQ $ModuleHash[$module])) { return $false } }
@@ -176,8 +189,7 @@
 				}
 				#endregion Quiet Validation [Calls Continue]
 				
-				switch ($Test)
-				{
+				switch ($Test) {
 					'LesserThan' { Write-Result -Name $module -Success ($modulesFound | Where-Object Version -LT $ModuleHash[$module]) -VersionsFound $modulesFound.Version -Test $Test }
 					'LesserEqual' { Write-Result -Name $module -Success ($modulesFound | Where-Object Version -LE $ModuleHash[$module]) -VersionsFound $modulesFound.Version -Test $Test }
 					'Equal' { Write-Result -Name $module -Success ($modulesFound | Where-Object Version -EQ $ModuleHash[$module]) -VersionsFound $modulesFound.Version -Test $Test }
@@ -191,8 +203,7 @@
 		}
 		#endregion Validation Scriptblock
 	}
-	process
-	{
-		Invoke-PSFCommand -ComputerName $ComputerName -Credential $Credential -ScriptBlock $scriptBlock -ArgumentList $moduleHash, $Test, $Quiet.ToBool() -HideComputerName
+	process {
+		Invoke-PSFCommand -ComputerName $ComputerName -Credential $Credential -ScriptBlock $scriptBlock -ArgumentList $moduleHash, $Test, $Quiet.ToBool(), $Scope -HideComputerName
 	}
 }
