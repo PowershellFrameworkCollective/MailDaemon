@@ -25,8 +25,8 @@
 	'Send-MDMail.Email.TriggerFailed'               = 'Failed to trigger the Mail Daemon task to send {0}'
 	
 	# Set-MDDaemon
-	'Set-MDDaemon.UpdatingSettings'                 = 'Starting Daemon configuration update on {0}'
-	'Set-MDDaemon.UpdateSetting'                    = 'Updating the Daemon configuration setting {0} to {1}'
+	'Set-MDDaemon.UpdatingSettings'                 = 'Starting Daemon configuration update on {0}' # ($ComputerName -join ", ")
+	'Set-MDDaemon.UpdateSetting'                    = 'Updating the Daemon configuration setting {0} to {1}' # $key, $Parameters[$key]
 	
 	# Update-MDFolderPermission
 	'Update-MDFolderPermission.Granting.DaemonUser' = 'Assigning write permissions as daemon account to {0} on "{1}" and "{2}"'

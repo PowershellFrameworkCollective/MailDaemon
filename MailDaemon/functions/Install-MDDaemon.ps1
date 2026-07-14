@@ -172,7 +172,10 @@
 		$CertificateName,
 
 		[switch]
-		$NoLogging
+		$NoLogging,
+
+		[switch]
+		$UsePWSH
 	)
 	
 	begin {
@@ -224,8 +227,10 @@
 		
 		#region Setup Task Configuration
 		if (-not $NoTask) {
-			$action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -Command Invoke-MDDaemon"
-			if ($NoLogging) { $action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -Command Invoke-MDDaemon -NoLogging" }
+			$executable = 'powershell.exe'
+			if ($UsePWSH) { $executable = 'pwsh.exe' }
+			$action = New-ScheduledTaskAction -Execute $executable -Argument "-NoProfile -Command Invoke-MDDaemon"
+			if ($NoLogging) { $action = New-ScheduledTaskAction -Execute $executable -Argument "-NoProfile -Command Invoke-MDDaemon -NoLogging" }
 			$triggers = @()
 			$triggers += New-ScheduledTaskTrigger -AtStartup -RandomDelay "00:15:00"
 			$triggers += New-ScheduledTaskTrigger -At "00:00:00" -Daily
@@ -285,6 +290,7 @@
 		$testResults = Test-Module -ComputerName $ComputerName -Credential $Credential -Module @{
 			MailDaemon  = $script:ModuleVersion
 			PSFramework = (Get-Module -Name PSFramework).Version
+			EntraAuth = (Get-Module -Name EntraAuth).Version
 		}
 		
 		$failedTests = $testResults | Where-Object Success -EQ $false
@@ -300,6 +306,9 @@
 		$paramMainInstallCall['ComputerName'] = $ComputerName
 		
 		Invoke-PSFCommand @paramMainInstallCall
+
+		$parametersInvoke = @{ ComputerName = $ComputerName }
+		if ($Credential) { $parametersInvoke['Credential'] = $Credential }
 		
 		#region Securely store credentials
 		if ($PSBoundParameters.ContainsKey('SenderCredential')) {
@@ -312,8 +321,6 @@
 			if ($TaskUser) { $parametersSave['AccessAccount'] = $TaskUser }
 			Save-MDCredential @parametersSave
 			
-			$parametersInvoke = @{ ComputerName = $ComputerName }
-			if ($Credential) { $parametersInvoke['Credential'] = $Credential }
 			Invoke-PSFCommand @parametersInvoke -ScriptBlock {
 				Set-MDDaemon -SenderCredentialPath "C:\ProgramData\PowerShell\MailDaemon\senderCredentials.clixml"
 			}

@@ -3,7 +3,7 @@
 	RootModule = 'MailDaemon.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.3.19'
+	ModuleVersion = '1.3.23'
 	
 	# ID used to uniquely identify this module
 	GUID = 'd5ba333f-5210-4d69-83f0-150dd0909139'
@@ -26,7 +26,7 @@
 	# Modules that must be imported into the global environment prior to importing
 	# this module
 	RequiredModules = @(
-		@{ ModuleName='PSFramework'; ModuleVersion='1.13.416' }
+		@{ ModuleName='PSFramework'; ModuleVersion='1.14.457' }
 		@{ ModuleName='EntraAuth'; ModuleVersion='1.8.52' }
 	)
 	

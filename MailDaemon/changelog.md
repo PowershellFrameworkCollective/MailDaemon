@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## 1.3.23 (2026-07-14)
+
++ Upd: Install-MDDaemon - added `-UsePWSH` parameter to allow running mailer with PowerShell 7
++ Fix: Install-MDDaemon - fails to register scheduled task when not providing sender credentials
++ Fix: Install-MDDaemon - incorrectly detects modules as installed on local setup, when the modules are only installed for the local user
++ Fix: Install-MDDaemon - fails to ensure proper installation of EntraAuth on targeted computer
+
 ## 1.3.19 (2026-05-28)
 
 + Major: Added capability to send emails by Graph API, rather than SMTP.
