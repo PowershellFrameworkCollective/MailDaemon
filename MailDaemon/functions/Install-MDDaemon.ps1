@@ -93,6 +93,9 @@
 		Disables logging.
 		Unless specified, this setup step will also prepare the windows eventlog by creating a dedicated eventlog for MailDaemon.
 
+	.PARAMETER UsePWSH
+		When setting up the mail daemon task, use PowerShell 7, rather than the default Windows PowerShell
+
 	.EXAMPLE
 		PS C:\> Install-MDDaemon -ComputerName DC1, DC2, DC3 -TaskUser $cred -DaemonUser "DOMAIN\MailDaemon" -SmtpServer 'mail.domain.org' -SenderDefault 'daemon@domain.org' -RecipientDefault 'helpdesk-t2@domain.org'
 		
@@ -172,7 +175,10 @@
 		$CertificateName,
 
 		[switch]
-		$NoLogging
+		$NoLogging,
+
+		[switch]
+		$UsePWSH
 	)
 	
 	begin {
@@ -224,8 +230,10 @@
 		
 		#region Setup Task Configuration
 		if (-not $NoTask) {
-			$action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -Command Invoke-MDDaemon"
-			if ($NoLogging) { $action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -Command Invoke-MDDaemon -NoLogging" }
+			$executable = 'powershell.exe'
+			if ($UsePWSH) { $executable = 'pwsh.exe' }
+			$action = New-ScheduledTaskAction -Execute $executable -Argument "-NoProfile -Command Invoke-MDDaemon"
+			if ($NoLogging) { $action = New-ScheduledTaskAction -Execute $executable -Argument "-NoProfile -Command Invoke-MDDaemon -NoLogging" }
 			$triggers = @()
 			$triggers += New-ScheduledTaskTrigger -AtStartup -RandomDelay "00:15:00"
 			$triggers += New-ScheduledTaskTrigger -At "00:00:00" -Daily
@@ -249,7 +257,7 @@
 		#endregion Setup Task Configuration
 		
 		#region Preparing Parameters
-		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Include 'PickupPath', 'SentPath', 'FailedPath', 'MailSentRetention', 'MailAbandonThreshold', 'MailFailedRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault', 'UseSSL', 'ClientID', 'TenantID', 'Identity', 'Federated', 'CertificateThumbprint', 'CertificateName'
+		$parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Include 'PickupPath', 'SentPath', 'FailedPath', 'MailSentRetention', 'MailAbandonThreshold', 'MailFailedRetention', 'SmtpServer', 'SenderDefault', 'RecipientDefault', 'UseSSL', 'ClientID', 'TenantID', 'Identity', 'Federated', 'CertificateThumbprint', 'CertificateName', 'DaemonUser','WriteUser'
 		if ($parameters.Federated -or $parameters.Identity -or $parameters.ClientID) { $parameters.Type = 'Graph' }
 		
 		$paramMainInstallCall = @{
@@ -285,7 +293,8 @@
 		$testResults = Test-Module -ComputerName $ComputerName -Credential $Credential -Module @{
 			MailDaemon  = $script:ModuleVersion
 			PSFramework = (Get-Module -Name PSFramework).Version
-		}
+			EntraAuth = (Get-Module -Name EntraAuth).Version
+		} -Scope AllUsers
 		
 		$failedTests = $testResults | Where-Object Success -EQ $false
 		
@@ -300,6 +309,9 @@
 		$paramMainInstallCall['ComputerName'] = $ComputerName
 		
 		Invoke-PSFCommand @paramMainInstallCall
+
+		$parametersInvoke = @{ ComputerName = $ComputerName }
+		if ($Credential) { $parametersInvoke['Credential'] = $Credential }
 		
 		#region Securely store credentials
 		if ($PSBoundParameters.ContainsKey('SenderCredential')) {
@@ -312,8 +324,6 @@
 			if ($TaskUser) { $parametersSave['AccessAccount'] = $TaskUser }
 			Save-MDCredential @parametersSave
 			
-			$parametersInvoke = @{ ComputerName = $ComputerName }
-			if ($Credential) { $parametersInvoke['Credential'] = $Credential }
 			Invoke-PSFCommand @parametersInvoke -ScriptBlock {
 				Set-MDDaemon -SenderCredentialPath "C:\ProgramData\PowerShell\MailDaemon\senderCredentials.clixml"
 			}

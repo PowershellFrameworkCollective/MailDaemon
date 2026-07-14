@@ -83,7 +83,7 @@
 			#region Specified a module name
 			else
 			{
-				$moduleObject = Get-Module $Module | Sort-Object Version -Descending | Select-Object -First 1
+				$moduleObject = Get-Module $Module -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
 				if (-not $moduleObject)
 				{
 					return [pscustomobject]@{

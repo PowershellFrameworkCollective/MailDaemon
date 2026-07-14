@@ -83,7 +83,7 @@
 			}
 			foreach ($user in $WriteUser)
 			{
-				if ($user.Trim()) { continue }
+				if (-not $user.Trim()) { continue }
 				Write-PSFMessage -String 'Update-MDFolderPermission.Granting.WriteUser' -StringValues $user, $pickupPath
 				$rule = New-Object System.Security.AccessControl.FileSystemAccessRule($user, 'Write', 'Allow')
 				
